@@ -1,0 +1,115 @@
+/* ============================================================
+   Heynow — sistema de diseño reutilizable (dark editorial)
+   Tokens + componentes. Importar con:
+   <link rel="stylesheet" href="assets/css/heynow.css">
+   ============================================================ */
+
+/* ---------- Tipografía corporativa ---------- */
+@font-face{ font-family:'Arbeit Pro'; src:url('../fonts/ArbeitPro-Regular.woff2') format('woff2'); font-weight:400; font-style:normal; font-display:swap; }
+@font-face{ font-family:'Arbeit Pro'; src:url('../fonts/ArbeitPro-Medium.woff2') format('woff2'); font-weight:500; font-style:normal; font-display:swap; }
+@font-face{ font-family:'Arbeit Pro'; src:url('../fonts/ArbeitPro-Bold.woff2') format('woff2'); font-weight:700; font-style:normal; font-display:swap; }
+
+:root{
+  /* Base dark casi negro */
+  --hn-bg:#0A0A0B;
+  --hn-surface:#0F0F12;
+  --hn-surface-2:#151519;
+  --hn-border:#212227;
+  --hn-border-soft:rgba(255,255,255,.07);
+
+  /* Texto */
+  --hn-text:#FFFFFF;
+  --hn-muted:#A2A6AD;
+  --hn-faint:#6B6F76;
+
+  /* Acentos de marca */
+  --hn-orange:#F15C2C;
+  --hn-blue:#2A4BF5;
+  --hn-violet:#AF52E8;
+  --hn-grad:linear-gradient(90deg,#F15C2C 0%, #2A4BF5 52%, #AF52E8 100%);
+
+  /* Mapeo por canal (Flow = naranja, color héroe) */
+  --c-cascada:var(--hn-blue);
+  --c-agente:var(--hn-violet);
+  --c-flow:var(--hn-orange);
+
+  /* Tipografía */
+  --hn-font: 'Arbeit Pro', system-ui, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --hn-mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+
+  /* Sombra / glow */
+  --hn-shadow:0 1px 2px rgba(0,0,0,.5), 0 24px 60px -28px rgba(0,0,0,.8);
+}
+
+/* ---------- Base ---------- */
+*{ box-sizing:border-box; }
+html,body{ margin:0; }
+body{
+  background:
+    radial-gradient(1100px 520px at 78% -8%, rgba(241,92,44,.06), transparent 60%),
+    radial-gradient(900px 480px at 8% 4%, rgba(42,75,245,.05), transparent 58%),
+    var(--hn-bg);
+  color:var(--hn-text); font-family:var(--hn-font);
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+
+/* ---------- Nav ---------- */
+.hn-nav{ display:flex; align-items:center; justify-content:space-between; gap:18px; padding:18px clamp(18px,5vw,56px); }
+.hn-brand{ display:inline-flex; align-items:center; gap:11px; color:var(--hn-text); text-decoration:none; }
+.hn-brand .hn-iso{ width:26px; height:26px; color:var(--hn-text); flex:none; }
+.hn-brand .hn-iso svg{ width:100%; height:100%; display:block; }
+.hn-brand .hn-word{ font-weight:700; font-size:21px; letter-spacing:-.01em; line-height:1; }
+.hn-brand .hn-wm-img{ height:60px; width:auto; display:block; }
+.hn-nav-links{ display:flex; align-items:center; gap:26px; }
+.hn-nav-links a{ color:var(--hn-muted); font-size:14px; text-decoration:none; transition:color .15s ease; }
+.hn-nav-links a:hover{ color:var(--hn-text); }
+@media (max-width:720px){ .hn-nav-links{ display:none; } }
+
+/* ---------- Línea de acento tricolor ---------- */
+.hn-grad-rule{ height:2px; border:0; margin:0; background:var(--hn-grad); }
+
+/* ---------- Tipografía editorial ---------- */
+.hn-eyebrow{ font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--hn-orange); }
+.hn-display{ font-weight:700; letter-spacing:-.022em; line-height:1.04; margin:0; text-wrap:balance; }
+.hn-h1{ font-size:clamp(30px,4.4vw,52px); }
+.hn-h2{ font-size:clamp(22px,3vw,32px); }
+.hn-sub{ color:var(--hn-muted); font-size:clamp(15px,1.4vw,17px); line-height:1.55; margin:0; }
+.hn-meta{ font-family:var(--hn-mono); font-size:12px; color:var(--hn-faint); letter-spacing:.02em; }
+.hn-meta b{ color:var(--hn-muted); font-weight:600; }
+
+/* ---------- Botones ---------- */
+.hn-btn{ display:inline-flex; align-items:center; gap:9px; font:inherit; font-weight:700; font-size:14.5px; padding:12px 22px; border-radius:12px; border:1px solid transparent; cursor:pointer; text-decoration:none; transition:transform .12s ease, filter .12s ease, background .15s ease; }
+.hn-btn:focus-visible{ outline:2px solid var(--hn-orange); outline-offset:3px; }
+.hn-btn--primary{ background:var(--hn-orange); color:#fff; }
+.hn-btn--primary:hover{ filter:brightness(1.07); transform:translateY(-1px); }
+.hn-btn--primary:disabled{ opacity:.55; cursor:default; transform:none; filter:none; }
+.hn-btn--ghost{ background:transparent; border-color:var(--hn-border); color:var(--hn-text); }
+.hn-btn--ghost:hover{ background:var(--hn-surface-2); }
+
+.hn-link{ color:var(--hn-text); font-weight:700; font-size:13.5px; text-decoration:none; display:inline-flex; align-items:center; gap:7px; }
+.hn-link--accent{ color:var(--hn-orange); }
+.hn-link:hover{ gap:10px; }
+
+/* ---------- Badges (pills) ---------- */
+.hn-badge{ display:inline-flex; align-items:center; gap:7px; padding:5px 11px; border:1px solid var(--c,var(--hn-orange)); color:var(--c,var(--hn-orange)); border-radius:999px; font-size:10.5px; font-weight:700; letter-spacing:.11em; text-transform:uppercase; white-space:nowrap; }
+.hn-badge .dot{ width:6px; height:6px; border-radius:2px; background:var(--c,var(--hn-orange)); }
+.hn-badge.is-orange{ --c:var(--hn-orange); }
+.hn-badge.is-blue{ --c:var(--hn-blue); }
+.hn-badge.is-violet{ --c:var(--hn-violet); }
+
+/* ---------- Cards ---------- */
+.hn-card{ position:relative; background:var(--hn-surface); border:1px solid var(--hn-border); border-radius:16px; box-shadow:var(--hn-shadow); }
+.hn-card--accent::before{ content:""; position:absolute; top:-1px; left:18px; right:18px; height:2px; background:var(--c,var(--hn-orange)); border-radius:0 0 3px 3px; box-shadow:0 0 18px var(--c,var(--hn-orange)); opacity:.95; }
+
+/* ---------- Stat gigante ---------- */
+.hn-stat{ font-weight:700; line-height:.9; letter-spacing:-.03em; font-size:clamp(40px,6vw,64px);
+  background:linear-gradient(178deg, var(--c,var(--hn-orange)), color-mix(in srgb, var(--c,var(--hn-orange)) 62%, #000));
+  -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+/* ---------- Utilidades ---------- */
+.hn-mono{ font-family:var(--hn-mono); }
+.hn-muted{ color:var(--hn-muted); }
+.hn-faint{ color:var(--hn-faint); }
+.hn-c-orange{ color:var(--hn-orange); }
+.hn-c-blue{ color:var(--hn-blue); }
+.hn-c-violet{ color:var(--hn-violet); }

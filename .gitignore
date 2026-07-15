@@ -1,0 +1,11 @@
+﻿node_modules/
+scratchpad/pptx/node_modules/
+**/node_modules/
+.DS_Store
+Thumbs.db
+~$*.pptx
+.env
+.env.*
+
+tasks/
+

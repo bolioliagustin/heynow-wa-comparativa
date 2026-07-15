@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heynow · Cascada vs Agente IA vs WhatsApp Flow</title>
+<link rel="icon" href="assets/brand/heynow-iso.png">
+<link rel="stylesheet" href="assets/css/heynow.css">
+<style>
+  /* ---------- WhatsApp (chat real, se mantiene fiel) ---------- */
+  :root{
+    --wa-wallpaper:#0B141A; --wa-header:#202C33; --wa-out:#005C4B; --wa-in:#202C33;
+    --wa-ink:#E9EDEF; --wa-ink-muted:#8696A0; --wa-tick:#53BDEB; --wa-link:#53BDEB;
+  }
+
+  .page{ max-width:1200px; margin:0 auto; padding:38px clamp(18px,5vw,56px) 80px; }
+
+  /* ---------- Hero ---------- */
+  .hero{ display:flex; flex-direction:column; gap:14px; max-width:70ch; margin-bottom:14px; }
+  .hero .hn-h1{ margin-top:2px; }
+  .hero .hn-h1 .hl{ color:var(--hn-orange); }
+
+  .controls{ display:flex; align-items:center; gap:16px; margin:26px 0 30px; flex-wrap:wrap; }
+
+  /* ---------- Grid de columnas ---------- */
+  .phones-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:22px; align-items:start; }
+  .phone-col{ padding:20px 18px 18px; display:flex; flex-direction:column; gap:16px; min-width:0; }
+
+  .col-head{ display:flex; flex-direction:column; gap:12px; }
+  .col-name{ font-size:14.5px; font-weight:700; letter-spacing:-.01em; }
+  .col-metric{ display:flex; align-items:flex-end; gap:14px; }
+  .col-metric .hn-stat{ font-size:clamp(46px,7vw,60px); }
+  .col-metric-side{ display:flex; flex-direction:column; gap:3px; padding-bottom:8px; }
+  .col-unit{ font-size:13px; color:var(--hn-muted); font-weight:600; }
+  .col-cap{ font-size:12px; }
+
+  /* ---------- Teléfono ---------- */
+  .phone-frame{ width:100%; max-width:300px; margin:0 auto; height:592px; border-radius:36px; background:#050506; padding:7px; box-shadow:0 20px 50px -22px rgba(0,0,0,.9); position:relative; border:1px solid #1b1c20; }
+  .phone-frame::after{ content:""; position:absolute; top:14px; left:50%; transform:translateX(-50%); width:74px; height:19px; background:#050506; border-radius:0 0 13px 13px; z-index:6; }
+  .phone-screen{ position:relative; height:100%; border-radius:30px; overflow:hidden; background:var(--wa-wallpaper); display:flex; flex-direction:column; }
+
+  .statusbar{ height:25px; flex:none; background:var(--wa-header); color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 15px 0 19px; font-size:10.5px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .statusbar .sb-icons{ opacity:.9; letter-spacing:1px; }
+
+  .wa-header{ background:var(--wa-header); color:#fff; padding:8px 10px; display:flex; align-items:center; gap:8px; flex:none; }
+  .wa-back{ font-size:19px; line-height:1; opacity:.95; flex:none; margin:0 2px; }
+  .wa-avatar{ width:33px; height:33px; border-radius:50%; background:linear-gradient(135deg,#0e9c80,#0a6f5c); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex:none; color:#fff; }
+  .wa-id{ display:flex; flex-direction:column; line-height:1.25; min-width:0; flex:1; }
+  .wa-id .name{ font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .wa-id .status{ font-size:11px; opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-height:13px; color:#8fd3c6; }
+
+  .wa-body{ flex:1; overflow-y:auto; padding:12px 10px; display:flex; flex-direction:column; gap:6px; background-image:radial-gradient(rgba(255,255,255,.028) 1.1px, transparent 1.1px); background-size:16px 16px; }
+  /* Scroll oculto pero funcional (se puede subir/bajar parándose dentro) */
+  .wa-body, .flow-screen, .flow-viewport{ scrollbar-width:none; -ms-overflow-style:none; }
+  .wa-body::-webkit-scrollbar, .flow-screen::-webkit-scrollbar, .flow-viewport::-webkit-scrollbar{ width:0; height:0; display:none; }
+  .wa-daytag{ align-self:center; background:rgba(32,44,51,.9); color:var(--wa-ink-muted); font-size:10.5px; font-weight:600; padding:3px 10px; border-radius:8px; margin:2px 0 6px; }
+
+  .bubble{ max-width:80%; padding:6px 9px 5px; border-radius:8px; font-size:13px; line-height:1.4; box-shadow:0 1px .5px rgba(0,0,0,.3); white-space:pre-wrap; position:relative; }
+  .bubble.bot{ align-self:flex-start; background:var(--wa-in); color:var(--wa-ink); border-top-left-radius:2px; }
+  .bubble.user{ align-self:flex-end; background:var(--wa-out); color:#E9EDEF; border-top-right-radius:2px; }
+  .bubble .meta{ float:right; margin:6px 0 -2px 10px; display:inline-flex; align-items:center; gap:3px; }
+  .bubble .ts{ font-size:9.5px; color:var(--wa-ink-muted); }
+  .bubble.user .ts{ color:rgba(233,237,239,.6); }
+  .bubble.user .tick{ width:16px; height:11px; display:inline-block; }
+  .bubble.user .tick svg{ width:100%; height:100%; display:block; }
+  .bubble.system{ align-self:center; background:rgba(255,255,255,.07); color:var(--wa-ink-muted); font-size:11px; padding:5px 12px; border-radius:8px; box-shadow:none; max-width:88%; text-align:center; }
+
+  .cta-btn{ margin:8px -9px -5px; padding:9px; border-top:1px solid rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; gap:8px; color:var(--wa-link); font-weight:600; font-size:13px; cursor:default; }
+  .cta-btn svg{ width:15px; height:15px; }
+  .cta-btn.pressed{ background:rgba(83,189,235,.1); }
+
+  .typing{ align-self:flex-start; background:var(--wa-in); border-radius:8px; border-top-left-radius:2px; padding:9px 12px; display:flex; gap:4px; box-shadow:0 1px .5px rgba(0,0,0,.3); }
+  .typing i{ width:6px; height:6px; border-radius:50%; background:var(--wa-ink-muted); display:block; animation:blink 1.1s infinite ease-in-out; }
+  .typing i:nth-child(2){ animation-delay:.15s; } .typing i:nth-child(3){ animation-delay:.3s; }
+  @keyframes blink{ 0%,80%,100%{ opacity:.25; transform:translateY(0);} 40%{ opacity:1; transform:translateY(-2px);} }
+
+  .wa-inputbar{ flex:none; padding:7px 8px; display:flex; align-items:center; gap:7px; }
+  .wa-inputbar .field{ flex:1; height:37px; border-radius:20px; background:var(--wa-in); display:flex; align-items:center; gap:8px; padding:0 12px; color:var(--wa-ink-muted); font-size:12.5px; }
+  .wa-inputbar .field .emoji{ font-size:15px; opacity:.7; }
+  .wa-inputbar .send{ width:37px; height:37px; border-radius:50%; background:#00A884; flex:none; display:flex; align-items:center; justify-content:center; color:#0B141A; }
+  .wa-inputbar .send svg{ width:17px; height:17px; margin-left:1px; }
+
+  /* ---------- Flow overlay (multi-pantalla) ---------- */
+  .flow-overlay{ position:absolute; inset:0; background:var(--hn-surface); transform:translateY(102%); transition:transform .42s cubic-bezier(.2,.8,.2,1); display:flex; flex-direction:column; z-index:7; }
+  .flow-overlay.open{ transform:translateY(0); }
+  .flow-topbar{ flex:none; background:var(--hn-surface); color:var(--hn-text); padding:14px 14px 11px; display:flex; align-items:center; gap:11px; border-bottom:1px solid var(--hn-border); }
+  .flow-topbar .fx{ font-size:17px; color:var(--hn-muted); line-height:1; }
+  .flow-brand{ display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
+  .flow-brand .t{ font-size:14px; font-weight:700; letter-spacing:-.01em; }
+  .flow-brand .s{ font-size:10.5px; color:var(--hn-faint); display:flex; align-items:center; gap:5px; }
+  .flow-brand .s svg{ width:10px; height:10px; }
+  .flow-progress{ flex:none; height:3px; background:var(--hn-border); position:relative; overflow:hidden; }
+  .flow-progress i{ position:absolute; inset:0 auto 0 0; width:16%; background:var(--c-flow); transition:width .45s cubic-bezier(.2,.8,.2,1); }
+
+  .flow-viewport{ flex:1; overflow:hidden; position:relative; }
+  .flow-track{ display:flex; height:100%; width:100%; transition:transform .4s cubic-bezier(.2,.8,.2,1); }
+  @media (prefers-reduced-motion: reduce){ .flow-overlay,.flow-track,.flow-progress i{ transition:none; } }
+  .flow-screen{ flex:0 0 100%; height:100%; overflow-y:auto; padding:18px 16px; display:flex; flex-direction:column; gap:13px; }
+  .flow-step{ font-size:10.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--c-flow); }
+  .flow-q{ font-size:16px; font-weight:700; line-height:1.3; letter-spacing:-.01em; color:var(--hn-text); }
+  .flow-help{ font-size:12px; color:var(--hn-muted); margin-top:-6px; }
+  .flow-controls{ display:flex; flex-direction:column; gap:8px; margin-top:2px; }
+
+  .f-opt{ display:flex; align-items:center; gap:11px; font-size:13px; color:var(--hn-muted); padding:11px 12px; border:1.5px solid var(--hn-border); border-radius:11px; transition:border-color .15s ease, background .15s ease, color .15s ease; background:var(--hn-surface-2); }
+  .f-opt i{ width:19px; height:19px; border:1.5px solid var(--hn-border); flex:none; display:flex; align-items:center; justify-content:center; box-sizing:border-box; color:#fff; font-size:12px; font-style:normal; }
+  .f-radio i{ border-radius:50%; }
+  .f-check i{ border-radius:6px; }
+  .f-opt.checked{ border-color:var(--c-flow); color:var(--hn-text); font-weight:600; background:color-mix(in srgb, var(--c-flow) 14%, transparent); }
+  .f-opt.checked i{ border-color:var(--c-flow); background:var(--c-flow); }
+
+  .f-nps{ display:flex; flex-wrap:wrap; gap:6px; }
+  .f-nps span{ width:26px; height:30px; border-radius:8px; border:1.5px solid var(--hn-border); font-size:12px; display:flex; align-items:center; justify-content:center; color:var(--hn-muted); font-family:var(--hn-mono); font-weight:600; background:var(--hn-surface-2); }
+  .f-nps span.checked{ background:var(--c-flow); border-color:var(--c-flow); color:#fff; }
+  .f-nps-scale{ display:flex; justify-content:space-between; font-size:10px; color:var(--hn-faint); margin-top:2px; }
+
+  .f-text{ border:1.5px solid var(--hn-border); border-radius:11px; padding:11px; font-size:13px; color:var(--hn-text); min-height:86px; line-height:1.45; background:var(--hn-surface-2); }
+  .f-text.active{ border-color:var(--c-flow); }
+  .f-text .cursor{ display:inline-block; width:1.5px; height:1.05em; background:var(--c-flow); vertical-align:-2px; margin-left:1px; animation:caret 1s step-end infinite; }
+  @keyframes caret{ 50%{ opacity:0; } }
+
+  .flow-foot{ flex:none; padding:12px 16px 16px; border-top:1px solid var(--hn-border); background:var(--hn-surface); }
+  .flow-next{ width:100%; background:var(--c-flow); color:#fff; text-align:center; padding:13px; border-radius:12px; font-weight:700; font-size:14px; border:none; font-family:inherit; transition:opacity .15s ease, transform .1s ease; cursor:default; }
+  .flow-next.pressed{ transform:scale(.98); opacity:.7; }
+  .flow-secure{ text-align:center; font-size:10px; color:var(--hn-faint); margin-top:9px; display:flex; align-items:center; justify-content:center; gap:5px; }
+  .flow-secure svg{ width:10px; height:10px; }
+
+  /* ---------- Comparativa ---------- */
+  .compare{ margin-top:56px; }
+  .compare .hn-eyebrow{ color:var(--hn-muted); }
+  .compare h2{ margin:8px 0 18px; }
+  .table-wrap{ overflow-x:auto; border:1px solid var(--hn-border); border-radius:16px; background:var(--hn-surface); box-shadow:var(--hn-shadow); }
+  table{ width:100%; border-collapse:collapse; font-size:13px; min-width:620px; }
+  thead th{ text-align:left; padding:15px 16px; font-size:12.5px; letter-spacing:.01em; color:var(--hn-text); font-weight:700; border-bottom:1px solid var(--hn-border); }
+  thead th.metric-col{ width:210px; }
+  thead th .dot{ display:inline-block; width:8px; height:8px; border-radius:3px; margin-right:8px; vertical-align:middle; }
+  tbody td{ padding:15px 16px; border-bottom:1px solid var(--hn-border); color:var(--hn-muted); vertical-align:top; line-height:1.45; }
+  tbody tr:last-child td{ border-bottom:none; }
+  td.metric{ color:var(--hn-text); font-weight:600; font-size:12.5px; }
+  td.big-num{ font-family:var(--hn-mono); font-size:24px; font-weight:700; font-variant-numeric:tabular-nums; }
+
+  footer.note{ margin-top:24px; font-size:12px; color:var(--hn-faint); line-height:1.6; }
+  footer.note b{ color:var(--hn-muted); }
+
+  @media (max-width:560px){ .phone-frame{ height:558px; } }
+</style>
+</head>
+<body>
+
+<nav class="hn-nav">
+  <a class="hn-brand" id="hnBrand" href="#">
+    <img class="hn-wm-img" src="assets/brand/heynow-wordmark.png" alt="Heynow">
+  </a>
+</nav>
+<hr class="hn-grad-rule">
+
+<main class="page">
+  <header class="hero">
+    <span class="hn-eyebrow">Demo · WhatsApp Flows</span>
+    <h1 class="hn-display hn-h1">La misma encuesta, resuelta de tres formas. <span class="hl">Un solo mensaje gana.</span></h1>
+    <p class="hn-sub">Bot en cascada y Agente IA arman la charla pregunta por pregunta: cada una es un mensaje saliente de la empresa. El Flow de WhatsApp resuelve la misma encuesta con un solo mensaje y un formulario nativo.</p>
+  </header>
+
+  <div class="controls">
+    <button class="hn-btn hn-btn--primary" id="playBtn"><span>▶</span> Reproducir demo</button>
+    <span class="hn-meta" id="hint">Arranca los 3 chats al mismo tiempo, en tiempo real.</span>
+  </div>
+
+  <div class="phones-grid">
+    <!-- ============ CASCADA ============ -->
+    <div class="phone-col hn-card hn-card--accent" style="--c:var(--c-cascada)">
+      <div class="col-head">
+        <span class="col-name" style="color:var(--c-cascada)">Bot en cascada</span>
+        <div class="col-metric">
+          <span class="hn-stat" id="count-cascada" style="--c:var(--c-cascada)">0</span>
+          <div class="col-metric-side">
+            <span class="col-unit">de 6 mensajes</span>
+            <span class="hn-meta col-cap">tiempo <b id="time-cascada">0.0s</b></span>
+          </div>
+        </div>
+      </div>
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="statusbar"><span>10:02</span><span class="sb-icons">▮▮▮ 4G 84%</span></div>
+          <div class="wa-header">
+            <span class="wa-back">‹</span>
+            <div class="wa-avatar">HV</div>
+            <div class="wa-id"><span class="name">Hotel Vista Mar</span><span class="status" id="status-cascada">en línea</span></div>
+          </div>
+          <div class="wa-body" id="body-cascada"><div class="wa-daytag">HOY</div></div>
+          <div class="wa-inputbar"><div class="field"><span class="emoji">☺</span>Mensaje</div><div class="send"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a1 1 0 0 0-1.39 1.2L4 11.5l9 .5-9 .5-1.99 6.7a1 1 0 0 0 1.39 1.2z"/></svg></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ AGENTE IA ============ -->
+    <div class="phone-col hn-card hn-card--accent" style="--c:var(--c-agente)">
+      <div class="col-head">
+        <span class="col-name" style="color:var(--c-agente)">Agente IA</span>
+        <div class="col-metric">
+          <span class="hn-stat" id="count-agente" style="--c:var(--c-agente)">0</span>
+          <div class="col-metric-side">
+            <span class="col-unit">de 6 mensajes</span>
+            <span class="hn-meta col-cap">tiempo <b id="time-agente">0.0s</b></span>
+          </div>
+        </div>
+      </div>
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="statusbar"><span>10:02</span><span class="sb-icons">▮▮▮ 4G 84%</span></div>
+          <div class="wa-header">
+            <span class="wa-back">‹</span>
+            <div class="wa-avatar">HV</div>
+            <div class="wa-id"><span class="name">Hotel Vista Mar</span><span class="status" id="status-agente">en línea</span></div>
+          </div>
+          <div class="wa-body" id="body-agente"><div class="wa-daytag">HOY</div></div>
+          <div class="wa-inputbar"><div class="field"><span class="emoji">☺</span>Mensaje</div><div class="send"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a1 1 0 0 0-1.39 1.2L4 11.5l9 .5-9 .5-1.99 6.7a1 1 0 0 0 1.39 1.2z"/></svg></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ WHATSAPP FLOW ============ -->
+    <div class="phone-col hn-card hn-card--accent" style="--c:var(--c-flow)">
+      <div class="col-head">
+        <span class="col-name" style="color:var(--c-flow)">WhatsApp Flow</span>
+        <div class="col-metric">
+          <span class="hn-stat" id="count-flow" style="--c:var(--c-flow)">0</span>
+          <div class="col-metric-side">
+            <span class="col-unit">de 1 mensaje</span>
+            <span class="hn-meta col-cap">tiempo <b id="time-flow">0.0s</b></span>
+          </div>
+        </div>
+      </div>
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="statusbar"><span>10:02</span><span class="sb-icons">▮▮▮ 4G 84%</span></div>
+          <div class="wa-header">
+            <span class="wa-back">‹</span>
+            <div class="wa-avatar">HV</div>
+            <div class="wa-id"><span class="name">Hotel Vista Mar</span><span class="status" id="status-flow">en línea</span></div>
+          </div>
+          <div class="wa-body" id="body-flow"><div class="wa-daytag">HOY</div></div>
+          <div class="wa-inputbar"><div class="field"><span class="emoji">☺</span>Mensaje</div><div class="send"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a1 1 0 0 0-1.39 1.2L4 11.5l9 .5-9 .5-1.99 6.7a1 1 0 0 0 1.39 1.2z"/></svg></div></div>
+
+          <div class="flow-overlay" id="flow-overlay">
+            <div class="flow-topbar">
+              <span class="fx">✕</span>
+              <div class="flow-brand">
+                <span class="t">Encuesta de satisfacción</span>
+                <span class="s"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 9V7a5 5 0 0 0-10 0v2H5v12h14V9h-2zm-8 0V7a3 3 0 0 1 6 0v2H9z"/></svg>Hotel Vista Mar</span>
+              </div>
+            </div>
+            <div class="flow-progress"><i id="flow-bar"></i></div>
+            <div class="flow-viewport"><div class="flow-track" id="flow-track"></div></div>
+            <div class="flow-foot">
+              <button class="flow-next" id="flow-next">Continuar</button>
+              <div class="flow-secure"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 9V7a5 5 0 0 0-10 0v2H5v12h14V9h-2zm-8 0V7a3 3 0 0 1 6 0v2H9z"/></svg>Administrado por Hotel Vista Mar</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="compare">
+    <span class="hn-eyebrow">Comparativa</span>
+    <h2 class="hn-display hn-h2">Los números, lado a lado.</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="metric-col"></th>
+            <th><span class="dot" style="background:var(--c-cascada)"></span>Bot en cascada</th>
+            <th><span class="dot" style="background:var(--c-agente)"></span>Agente IA</th>
+            <th><span class="dot" style="background:var(--c-flow)"></span>WhatsApp Flow</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="metric">Mensajes salientes</td>
+            <td class="big-num" style="color:var(--c-cascada)">6</td>
+            <td class="big-num" style="color:var(--c-agente)">6</td>
+            <td class="big-num" style="color:var(--c-flow)">1</td>
+          </tr>
+          <tr>
+            <td class="metric">Formato de respuesta</td>
+            <td>Texto libre, una pregunta a la vez</td>
+            <td>Texto libre, una pregunta a la vez</td>
+            <td>Formulario nativo: radios, checks, escala y texto en una sola pantalla</td>
+          </tr>
+          <tr>
+            <td class="metric">Puede revisar antes de enviar</td>
+            <td>No — cada respuesta ya quedó enviada</td>
+            <td>No — cada respuesta ya quedó enviada</td>
+            <td>Sí — edita todo antes de tocar Enviar</td>
+          </tr>
+          <tr>
+            <td class="metric">Riesgo de abandono a mitad</td>
+            <td>Alto — 6 idas y vueltas</td>
+            <td>Alto — 6 idas y vueltas</td>
+            <td>Bajo — 1 sola pantalla</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <footer class="note">Tiempos de la demo ilustrativos, pensados para presentación. La diferencia real que importa es la cantidad de mensajes e idas y vueltas necesarias. <b>Heynow</b> · WhatsApp Flows.</footer>
+  </section>
+</main>
+
+<script>
+(function(){
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sleep = ms => new Promise(r => setTimeout(r, reduceMotion ? Math.min(ms,20) : ms));
+
+  const TICK = '<span class="tick"><svg viewBox="0 0 18 12" fill="none"><path d="M1 6.5l3 3L10 3" stroke="#53BDEB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 9.5L12.5 3" stroke="#53BDEB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+  const FLOW_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 9h8M8 13h5"/></svg>';
+
+  function clock(h,m){
+    return () => {
+      const t = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+      m++; if(m>=60){ m=0; h++; }
+      return t;
+    };
+  }
+
+  function makeCol(key){
+    const body = document.getElementById('body-'+key);
+    const countEl = document.getElementById('count-'+key);
+    const timeEl = document.getElementById('time-'+key);
+    const statusEl = document.getElementById('status-'+key);
+    let count = 0, startTs = null, timer = null, tk = clock(10,2);
+
+    function scrollBottom(){ body.scrollTop = body.scrollHeight; }
+    function startTimer(){
+      startTs = performance.now();
+      timer = setInterval(() => { timeEl.textContent = ((performance.now()-startTs)/1000).toFixed(1)+'s'; }, 100);
+    }
+    function stopTimer(){ if(timer) clearInterval(timer); timer=null; }
+    function setStatus(t){ if(statusEl) statusEl.textContent = t; }
+    function reset(){
+      body.innerHTML='<div class="wa-daytag">HOY</div>'; count=0; countEl.textContent='0'; timeEl.textContent='0.0s'; tk = clock(10,2); setStatus('en línea'); stopTimer();
+    }
+    function bump(){ count++; countEl.textContent = String(count); }
+
+    async function typing(ms){
+      setStatus('escribiendo…');
+      const el = document.createElement('div');
+      el.className='typing'; el.innerHTML='<i></i><i></i><i></i>';
+      body.appendChild(el); scrollBottom();
+      await sleep(ms);
+      el.remove(); setStatus('en línea');
+    }
+    async function botMsg(text, {typingMs=900, cta=null}={}){
+      await typing(typingMs);
+      bump();
+      const el = document.createElement('div');
+      el.className='bubble bot';
+      el.innerHTML = text.replace(/\n/g,'<br>') + '<span class="meta"><span class="ts">'+tk()+'</span></span>' + (cta ? '<div class="cta-btn">'+FLOW_ICON+cta+'</div>' : '');
+      body.appendChild(el); scrollBottom();
+      await sleep(260);
+      return el;
+    }
+    async function userMsg(text, delay=680){
+      await sleep(delay);
+      const el = document.createElement('div');
+      el.className='bubble user';
+      el.innerHTML = text.replace(/\n/g,'<br>') + '<span class="meta"><span class="ts">'+tk()+'</span>'+TICK+'</span>';
+      body.appendChild(el); scrollBottom();
+      await sleep(360);
+    }
+    async function systemMsg(text, delay=500){
+      await sleep(delay);
+      const el = document.createElement('div');
+      el.className='bubble system'; el.textContent = text;
+      body.appendChild(el); scrollBottom();
+    }
+
+    return { body, reset, startTimer, stopTimer, setStatus, bump, botMsg, userMsg, systemMsg };
+  }
+
+  const cascada = makeCol('cascada');
+  const agente = makeCol('agente');
+  const flow = makeCol('flow');
+
+  const OPTS5 = ['Muy insatisfecho/a','Insatisfecho/a','Ni satisfecho/a ni insatisfecho/a','Satisfecho/a','Muy satisfecho/a'];
+  const SERVICIOS = ['Restaurante','Servicio a la habitación','Piscina','Spa','Gimnasio','Bar','Desayuno','Estacionamiento','Salones / Eventos','Ninguno'];
+  function numbered(list){ return list.map((o,i)=>(i+1)+'. '+o).join('\n'); }
+
+  /* ---------------- Cascada ---------------- */
+  async function runCascada(){
+    cascada.reset(); cascada.startTimer();
+    await cascada.botMsg('¡Hola! Gracias por elegirnos en Hotel Vista Mar 🙌 Queremos conocer tu experiencia, te toma menos de 2 min.\n\n¿Qué tan satisfecho/a quedaste con el check-in?\n'+numbered(OPTS5)+'\n\nRespondé con el número.');
+    await cascada.userMsg('4');
+    await cascada.botMsg('¿Cómo calificarías la atención de nuestro personal durante tu estadía?\n'+numbered(OPTS5));
+    await cascada.userMsg('5');
+    await cascada.botMsg('¿Qué servicios utilizaste? (podés poner varios números separados por coma)\n'+numbered(SERVICIOS));
+    await cascada.userMsg('1, 3, 7');
+    await cascada.botMsg('En general, ¿qué tan satisfecho/a quedaste con esos servicios?\n'+numbered(OPTS5));
+    await cascada.userMsg('4');
+    await cascada.botMsg('De 0 a 10, ¿qué tan probable es que nos recomiendes a un familiar o amigo?');
+    await cascada.userMsg('9');
+    await cascada.botMsg('Por último, ¿algo que quieras destacar o sugerir? ✍️');
+    await cascada.userMsg('Todo muy bien, el desayuno podría tener más opciones dulces');
+    cascada.setStatus('en línea'); cascada.stopTimer();
+  }
+
+  /* ---------------- Agente IA ---------------- */
+  async function runAgente(){
+    agente.reset(); agente.startTimer();
+    await agente.botMsg('¡Hola! Soy el asistente virtual de Hotel Vista Mar 😊 ¿Tenés 2 minutos para contarme cómo fue tu estadía? Para arrancar: ¿qué tan conforme quedaste con el check-in?');
+    await agente.userMsg('Todo perfecto, fue muy rápido');
+    await agente.botMsg('¡Qué bueno! Y con la atención de nuestro personal durante tu estadía, ¿cómo la calificarías?');
+    await agente.userMsg('Excelente, muy atentos en todo momento');
+    await agente.botMsg('Genial 🙌 ¿Qué servicios usaste? (restaurante, spa, piscina, desayuno...)');
+    await agente.userMsg('Desayuno, piscina y el restaurante');
+    await agente.botMsg('¿Y en general qué tan conforme quedaste con esos servicios?');
+    await agente.userMsg('Muy conforme, todo buenísimo');
+    await agente.botMsg('Última: del 0 al 10, ¿qué tan probable es que nos recomiendes a alguien?');
+    await agente.userMsg('9, sin dudas');
+    await agente.botMsg('¡Excelente! ¿Algo que quieras destacar o sugerir para mejorar? ✍️');
+    await agente.userMsg('El desayuno podría tener más opciones dulces');
+    agente.setStatus('en línea'); agente.stopTimer();
+  }
+
+  /* ---------------- WhatsApp Flow (multi-pantalla) ---------------- */
+  const track = document.getElementById('flow-track');
+  const bar = document.getElementById('flow-bar');
+  const nextBtn = document.getElementById('flow-next');
+  const overlay = document.getElementById('flow-overlay');
+
+  function screenShell(step, total, question, help){
+    const sc = document.createElement('div');
+    sc.className = 'flow-screen';
+    sc.innerHTML =
+      '<div class="flow-step">Paso '+step+' de '+total+'</div>' +
+      '<div class="flow-q">'+question+'</div>' +
+      (help ? '<div class="flow-help">'+help+'</div>' : '') +
+      '<div class="flow-controls"></div>';
+    track.appendChild(sc);
+    return sc.querySelector('.flow-controls');
+  }
+  function buildRadio(host, options, pick){
+    const rows = options.map(o => {
+      const r = document.createElement('div'); r.className='f-opt f-radio';
+      r.innerHTML = '<i></i><span>'+o+'</span>'; host.appendChild(r); return r;
+    });
+    return async () => { await sleep(320); rows[pick].classList.add('checked'); rows[pick].querySelector('i').innerHTML='●'; };
+  }
+  function buildCheck(host, options, picks){
+    const rows = options.map(o => {
+      const r = document.createElement('div'); r.className='f-opt f-check';
+      r.innerHTML = '<i></i><span>'+o+'</span>'; host.appendChild(r); return r;
+    });
+    return async () => { for(const i of picks){ await sleep(200); rows[i].classList.add('checked'); rows[i].querySelector('i').innerHTML='✓'; } };
+  }
+  function buildNps(host, value){
+    const row = document.createElement('div'); row.className='f-nps';
+    const spans=[]; for(let i=0;i<=10;i++){ const s=document.createElement('span'); s.textContent=i; row.appendChild(s); spans.push(s); }
+    host.appendChild(row);
+    const scale=document.createElement('div'); scale.className='f-nps-scale'; scale.innerHTML='<span>Nada probable</span><span>Muy probable</span>'; host.appendChild(scale);
+    return async () => { await sleep(300); spans[value].classList.add('checked'); };
+  }
+  function buildText(host, finalText){
+    const box = document.createElement('div'); box.className='f-text'; host.appendChild(box);
+    return async () => {
+      box.classList.add('active');
+      const cursor=document.createElement('span'); cursor.className='cursor';
+      for(let i=1;i<=finalText.length;i++){
+        box.textContent = finalText.slice(0,i); box.appendChild(cursor);
+        await sleep(reduceMotion ? 1 : 20);
+      }
+    };
+  }
+
+  let fills = [];
+  function buildFlowScreens(){
+    track.innerHTML=''; fills=[];
+    const total = 6;
+    fills.push(buildRadio(screenShell(1,total,'¿Qué tan satisfecho/a quedaste con el check-in?'), OPTS5, 4));
+    fills.push(buildRadio(screenShell(2,total,'¿Cómo calificarías la atención de nuestro personal?'), OPTS5, 4));
+    fills.push(buildCheck(screenShell(3,total,'¿Qué servicios utilizaste?','Podés elegir varios.'), SERVICIOS, [0,2,6]));
+    fills.push(buildRadio(screenShell(4,total,'En general, ¿qué tan satisfecho/a quedaste con esos servicios?'), OPTS5, 3));
+    fills.push(buildNps(screenShell(5,total,'Del 0 al 10, ¿qué tan probable es que nos recomiendes?'), 9));
+    fills.push(buildText(screenShell(6,total,'¿Algo que quieras destacar o sugerir?','Opcional.'), 'Todo excelente, el desayuno podría tener más opciones dulces 🙂'));
+    return total;
+  }
+
+  function goTo(i, total){
+    track.style.transform = 'translateX(-'+(i*100)+'%)';
+    bar.style.width = (((i+1)/total)*100)+'%';
+    nextBtn.textContent = (i===total-1) ? 'Enviar respuestas' : 'Continuar';
+  }
+  async function pressNext(){ nextBtn.classList.add('pressed'); await sleep(200); nextBtn.classList.remove('pressed'); }
+
+  async function runFlow(){
+    flow.reset(); flow.startTimer();
+    overlay.classList.remove('open');
+    const total = buildFlowScreens();
+    track.style.transition='none'; goTo(0,total); track.offsetHeight; track.style.transition='';
+
+    await flow.botMsg('¡Hola! 👋 Gracias por elegirnos en Hotel Vista Mar. Nos encantaría conocer tu experiencia — te toma menos de 2 minutos ⏱️', { cta:'Completar encuesta' });
+    await sleep(650);
+    const ctaEl = flow.body.querySelector('.cta-btn:last-of-type');
+    if(ctaEl) ctaEl.classList.add('pressed');
+    await sleep(260);
+    overlay.classList.add('open');
+    await sleep(520);
+
+    for(let i=0;i<total;i++){
+      goTo(i,total);
+      await sleep(420);
+      await fills[i]();
+      await sleep(560);
+      if(i<total-1){ await pressNext(); }
+    }
+    await sleep(350);
+    await pressNext();
+    await sleep(320);
+    overlay.classList.remove('open');
+    await sleep(430);
+    await flow.systemMsg('✅ Respuesta enviada — ¡gracias por tu tiempo!', 120);
+    flow.setStatus('en línea'); flow.stopTimer();
+  }
+
+  /* ---------------- Control ---------------- */
+  const playBtn = document.getElementById('playBtn');
+  const hint = document.getElementById('hint');
+  let running = false;
+
+  playBtn.addEventListener('click', async () => {
+    if(running) return;
+    running = true;
+    playBtn.disabled = true;
+    playBtn.innerHTML = '<span>⏸</span> Reproduciendo…';
+    hint.textContent = 'Mirá cómo suben los mensajes salientes de cada columna.';
+    await Promise.all([runCascada(), runAgente(), runFlow()]);
+    playBtn.disabled = false;
+    playBtn.innerHTML = '<span>↻</span> Reproducir de nuevo';
+    hint.textContent = 'Cascada y Agente IA: 6 mensajes cada uno. Flow: 1 mensaje.';
+    running = false;
+  });
+})();
+</script>
+</body>
+</html>

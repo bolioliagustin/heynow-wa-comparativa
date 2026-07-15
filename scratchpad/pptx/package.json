@@ -1,0 +1,18 @@
+{
+  "name": "heynow-wa-comparativa-pptx",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Genera el deck PPTX 'Cascada vs Agente IA vs WhatsApp Flow' con identidad Heynow.",
+  "scripts": {
+    "icons": "node gen_icons.js",
+    "deck": "node build_deck.js",
+    "build": "node gen_icons.js && node build_deck.js"
+  },
+  "dependencies": {
+    "pptxgenjs": "^3.12.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-icons": "^5.2.1",
+    "sharp": "^0.33.4"
+  }
+}
