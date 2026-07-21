@@ -1,6 +1,13 @@
 ﻿# WhatsApp Flows — Comparativa Demo
 
-Demo interactiva de comparación WhatsApp (flujo / cascada / agente).
+Demos interactivas de WhatsApp para Heynow.
+
+## Demos
+
+| Página | Qué muestra |
+| --- | --- |
+| `scratchpad/index.html` | Cascada vs Agente IA vs WhatsApp Flow (misma encuesta) |
+| `scratchpad/flow-webchat.html` | Solo WhatsApp vs Flow + webchat (transaccional en WA, consultivo en canal web) |
 
 ## GitHub Pages
 
@@ -21,6 +28,8 @@ git push -u origin main
 
 `https://TU_USUARIO.github.io/TU_REPO/`
 
+URLs de demos: `/` y `/flow-webchat.html`.
+
 ### Local
 
-Abre `scratchpad/index.html` en el navegador (o sirve la carpeta `scratchpad`).
+Abre `scratchpad/index.html` o `scratchpad/flow-webchat.html` en el navegador (o sirve la carpeta `scratchpad`).
