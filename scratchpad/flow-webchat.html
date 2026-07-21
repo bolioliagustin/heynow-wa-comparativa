@@ -115,47 +115,62 @@
   .flow-secure{ text-align:center; font-size:10px; color:var(--hn-faint); margin-top:9px; display:flex; align-items:center; justify-content:center; gap:5px; }
   .flow-secure svg{ width:10px; height:10px; }
 
-  /* Webchat popup — same WA look, browser chrome */
+  /* Webchat = full-screen mobile browser inside the phone */
   .wc-popup{
-    position:absolute; z-index:20;
-    left:50%; top:52%;
-    width:min(292px, 92%);
-    height:460px;
-    transform:translate(-50%, -42%) scale(.86);
-    opacity:0; pointer-events:none;
+    position:absolute; inset:0; z-index:12;
     display:flex; flex-direction:column;
-    border-radius:14px; overflow:hidden;
-    background:#111B21;
-    border:1px solid #2a3942;
-    box-shadow:0 28px 70px -18px rgba(0,0,0,.85), 0 0 0 1px rgba(241,92,44,.25);
-    transition:opacity .35s ease, transform .42s cubic-bezier(.2,.8,.2,1);
+    background:#0B0C0F;
+    transform:translateY(102%);
+    transition:transform .55s cubic-bezier(.2,.8,.2,1);
+    pointer-events:none;
   }
-  .wc-popup.open{ opacity:1; pointer-events:auto; transform:translate(-50%, -48%) scale(1); }
+  .wc-popup.open{ transform:translateY(0); pointer-events:auto; }
+  .wc-popup .statusbar{ background:#1C1C1E; }
   .wc-chrome{
-    flex:none; display:flex; align-items:center; gap:8px;
-    background:#1a1b1f; border-bottom:1px solid #2a2b31;
-    padding:8px 10px; color:var(--hn-muted); font-size:10.5px;
+    flex:none; display:flex; flex-direction:column; gap:7px;
+    background:#1C1C1E; border-bottom:1px solid #2C2C2E;
+    padding:6px 10px 10px; color:#E5E5EA;
   }
-  .wc-chrome .dots{ display:flex; gap:5px; }
-  .wc-chrome .dots i{ width:8px; height:8px; border-radius:50%; display:block; background:#3a3b42; }
-  .wc-chrome .dots i:nth-child(1){ background:#ff5f57; }
-  .wc-chrome .dots i:nth-child(2){ background:#febc2e; }
-  .wc-chrome .dots i:nth-child(3){ background:#28c840; }
+  .wc-chrome-row{ display:flex; align-items:center; gap:8px; }
+  .wc-chrome .done{
+    flex:none; color:#0A84FF; font-size:12.5px; font-weight:600;
+    padding:2px 2px 2px 0; min-width:34px;
+  }
   .wc-chrome .url{
-    flex:1; min-width:0; background:#0f1014; border:1px solid #2a2b31;
-    border-radius:6px; padding:4px 8px; color:#8fd3c6;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    font-family:var(--hn-mono); font-size:10px;
+    flex:1; min-width:0; display:flex; align-items:center; gap:6px;
+    background:#2C2C2E; border-radius:10px; padding:7px 10px;
+    color:#AEAEB2; font-size:11px;
   }
-  .wc-chrome .x{ color:var(--hn-faint); font-size:14px; line-height:1; padding:0 2px; }
+  .wc-chrome .url .lock{ width:9px; height:9px; flex:none; opacity:.85; }
+  .wc-chrome .url .host{
+    flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    color:#F2F2F7; font-weight:500; letter-spacing:-.01em;
+  }
+  .wc-chrome .aa{
+    flex:none; width:26px; height:26px; border-radius:7px;
+    border:1.5px solid #636366; color:#F2F2F7;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700;
+  }
+  .wc-toolbar{
+    flex:none; display:flex; align-items:center; justify-content:space-around;
+    background:#1C1C1E; border-top:1px solid #2C2C2E;
+    padding:8px 10px 10px; color:#0A84FF;
+  }
+  .wc-toolbar span{
+    width:28px; height:22px; display:flex; align-items:center; justify-content:center;
+    font-size:18px; line-height:1; opacity:.95;
+  }
+  .wc-toolbar span.muted{ color:#636366; }
   .wc-badge{
-    position:absolute; top:40px; right:10px; z-index:8;
+    position:absolute; top:78px; right:10px; z-index:8;
     background:color-mix(in srgb, var(--hn-orange) 88%, #000);
     color:#fff; font-size:9px; font-weight:700; letter-spacing:.08em;
     text-transform:uppercase; padding:3px 7px; border-radius:6px;
   }
   .wc-screen{ flex:1; min-height:0; display:flex; flex-direction:column; background:var(--wa-wallpaper); position:relative; }
   .wc-screen .wa-body{ flex:1; }
+  @media (prefers-reduced-motion: reduce){ .wc-popup{ transition:none; } }
 
   .plan-card{
     margin:4px 0 2px; padding:10px 11px; border-radius:10px;
@@ -186,7 +201,6 @@
 
   @media (max-width:560px){
     .phone-frame{ height:558px; }
-    .wc-popup{ height:420px; width:min(270px, 94%); }
   }
 </style>
 </head>
@@ -212,6 +226,7 @@
 
   <div class="controls">
     <button class="hn-btn hn-btn--primary" id="playBtn"><span>▶</span> Reproducir demo</button>
+    <button class="hn-btn hn-btn--ghost" id="pauseBtn" disabled><span>⏸</span> Pausar</button>
     <span class="hn-meta" id="hint">Arranca ambos caminos al mismo tiempo.</span>
     <div class="nav-demos">
       <a class="hn-link hn-link--accent" href="index.html">← Demo Cascada vs Flow</a>
@@ -285,25 +300,38 @@
               <div class="flow-secure"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 9V7a5 5 0 0 0-10 0v2H5v12h14V9h-2zm-8 0V7a3 3 0 0 1 6 0v2H9z"/></svg>Datos protegidos · Seguros Aurora</div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Popup webchat (WA look + browser chrome) -->
-      <div class="wc-popup" id="wc-popup" aria-hidden="true">
-        <div class="wc-chrome">
-          <div class="dots"><i></i><i></i><i></i></div>
-          <div class="url">chat.segurosaurora.com/coberturas</div>
-          <span class="x">✕</span>
-        </div>
-        <div class="wc-screen">
-          <span class="wc-badge">Canal web</span>
-          <div class="wa-header">
-            <span class="wa-back">‹</span>
-            <div class="wa-avatar">SA</div>
-            <div class="wa-id"><span class="name">Coberturas · Web</span><span class="status" id="status-web">en línea</span></div>
+          <!-- Full-screen mobile browser (covers WA after handoff) -->
+          <div class="wc-popup" id="wc-popup" aria-hidden="true">
+            <div class="statusbar"><span>10:16</span><span class="sb-icons">▮▮▮ 4G 79%</span></div>
+            <div class="wc-chrome">
+              <div class="wc-chrome-row">
+                <span class="done">Listo</span>
+                <div class="url">
+                  <svg class="lock" viewBox="0 0 24 24" fill="currentColor"><path d="M17 9V7a5 5 0 0 0-10 0v2H5v12h14V9h-2zm-8 0V7a3 3 0 0 1 6 0v2H9z"/></svg>
+                  <span class="host">chat.segurosaurora.com</span>
+                </div>
+                <span class="aa">aA</span>
+              </div>
+            </div>
+            <div class="wc-screen">
+              <span class="wc-badge">Canal web</span>
+              <div class="wa-header">
+                <span class="wa-back">‹</span>
+                <div class="wa-avatar">SA</div>
+                <div class="wa-id"><span class="name">Coberturas · Web</span><span class="status" id="status-web">en línea</span></div>
+              </div>
+              <div class="wa-body" id="body-web"><div class="wa-daytag">HOY</div></div>
+              <div class="wa-inputbar"><div class="field"><span class="emoji">☺</span>Mensaje</div><div class="send"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a1 1 0 0 0-1.39 1.2L4 11.5l9 .5-9 .5-1.99 6.7a1 1 0 0 0 1.39 1.2z"/></svg></div></div>
+            </div>
+            <div class="wc-toolbar">
+              <span title="Atrás">‹</span>
+              <span title="Adelante" class="muted">›</span>
+              <span title="Compartir">⬆︎</span>
+              <span title="Marcadores">☆</span>
+              <span title="Pestañas">▢</span>
+            </div>
           </div>
-          <div class="wa-body" id="body-web"><div class="wa-daytag">HOY</div></div>
-          <div class="wa-inputbar"><div class="field"><span class="emoji">☺</span>Mensaje</div><div class="send"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a1 1 0 0 0-1.39 1.2L4 11.5l9 .5-9 .5-1.99 6.7a1 1 0 0 0 1.39 1.2z"/></svg></div></div>
         </div>
       </div>
     </div>
@@ -357,7 +385,39 @@
 <script>
 (function(){
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const sleep = ms => new Promise(r => setTimeout(r, reduceMotion ? Math.min(ms, 20) : ms));
+  const SPEED = 1.85; // más lento para presentación
+  let paused = false;
+  let pauseResolvers = [];
+  let pausedAt = 0;
+  let pausedTotal = 0;
+
+  function setPaused(v){
+    if(v === paused) return;
+    paused = v;
+    if(paused){
+      pausedAt = performance.now();
+    } else {
+      pausedTotal += performance.now() - pausedAt;
+      const q = pauseResolvers.splice(0);
+      q.forEach(r => r());
+    }
+  }
+  function waitWhilePaused(){
+    if(!paused) return Promise.resolve();
+    return new Promise(r => pauseResolvers.push(r));
+  }
+  async function sleep(ms){
+    const target = reduceMotion ? Math.min(ms, 20) : ms * SPEED;
+    let left = target;
+    while(left > 0){
+      await waitWhilePaused();
+      const slice = Math.min(40, left);
+      const t0 = performance.now();
+      await new Promise(r => setTimeout(r, slice));
+      // if we got paused mid-slice, don't over-count wall time harshly
+      left -= Math.max(slice, performance.now() - t0);
+    }
+  }
 
   const TICK = '<span class="tick"><svg viewBox="0 0 18 12" fill="none"><path d="M1 6.5l3 3L10 3" stroke="#53BDEB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 9.5L12.5 3" stroke="#53BDEB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
   const FLOW_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 9h8M8 13h5"/></svg>';
@@ -380,9 +440,18 @@
     let count = 0, startTs = null, timer = null, tk = clock(10,14);
 
     function scrollBottom(){ body.scrollTop = body.scrollHeight; }
+    function elapsedSec(){
+      if(startTs == null) return 0;
+      const freeze = paused ? (performance.now() - pausedAt) : 0;
+      return (performance.now() - startTs - pausedTotal - freeze) / 1000;
+    }
     function startTimer(){
       startTs = performance.now();
-      if(timeEl) timer = setInterval(() => { timeEl.textContent = ((performance.now()-startTs)/1000).toFixed(1)+'s'; }, 100);
+      pausedTotal = 0;
+      if(timeEl) timer = setInterval(() => {
+        if(paused) return;
+        timeEl.textContent = elapsedSec().toFixed(1)+'s';
+      }, 100);
     }
     function stopTimer(){ if(timer) clearInterval(timer); timer=null; }
     function setStatus(t){ if(statusEl) statusEl.textContent = t; }
@@ -410,7 +479,7 @@
       await sleep(ms);
       el.remove(); setStatus('en línea');
     }
-    async function botMsg(text, {typingMs=900, cta=null, html=false, count=true}={}){
+    async function botMsg(text, {typingMs=1400, cta=null, html=false, count=true}={}){
       await typing(typingMs);
       if(count) bump();
       const el = document.createElement('div');
@@ -418,18 +487,18 @@
       const content = html ? text : text.replace(/\n/g,'<br>');
       el.innerHTML = content + '<span class="meta"><span class="ts">'+tk()+'</span></span>' + (cta ? '<div class="cta-btn">'+FLOW_ICON+cta+'</div>' : '');
       body.appendChild(el); scrollBottom();
-      await sleep(260);
+      await sleep(420);
       return el;
     }
-    async function userMsg(text, delay=680){
+    async function userMsg(text, delay=1100){
       await sleep(delay);
       const el = document.createElement('div');
       el.className='bubble user';
       el.innerHTML = text.replace(/\n/g,'<br>') + '<span class="meta"><span class="ts">'+tk()+'</span>'+TICK+'</span>';
       body.appendChild(el); scrollBottom();
-      await sleep(360);
+      await sleep(550);
     }
-    async function systemMsg(text, delay=500){
+    async function systemMsg(text, delay=700){
       await sleep(delay);
       const el = document.createElement('div');
       el.className='bubble system'; el.textContent = text;
@@ -463,22 +532,22 @@
     solo.startTimer();
     solo.setChannel('WhatsApp');
 
-    await solo.botMsg('¡Hola! Soy el asistente de Seguros Aurora 🛡️ Para cotizar tu cobertura necesito unos datos.\n\n¿Cuál es tu nombre completo?');
+    await solo.botMsg('¡Hola! Soy el asistente de Seguros Aurora 🛡️ Para cotizar tu cobertura necesito unos datos.\n\n¿Cuál es tu nombre completo?', {typingMs:1500});
     await solo.userMsg('Martina López');
-    await solo.botMsg('¿Número de documento?');
+    await solo.botMsg('¿Número de documento?', {typingMs:1100});
     await solo.userMsg('38451209');
-    await solo.botMsg('¿A qué destino viajás?');
+    await solo.botMsg('¿A qué destino viajás?', {typingMs:1100});
     await solo.userMsg('España');
-    await solo.botMsg('¿Fechas de ida y vuelta?');
+    await solo.botMsg('¿Fechas de ida y vuelta?', {typingMs:1100});
     await solo.userMsg('12/08 al 28/08');
-    await solo.botMsg('Perfecto, ya registré tu solicitud ✅');
+    await solo.botMsg('Perfecto, ya registré tu solicitud ✅', {typingMs:1200});
 
-    await solo.userMsg('ah quiero saber si tenés coberturas de viajes');
-    await solo.botMsg('Sí — tenemos coberturas individuales, pareja y familiares. Según nuestra base: asistencia médica, cancelación y equipaje.', {typingMs:1100});
-    await solo.botMsg('Para recomendarte la mejor: ¿cuántas personas son y qué edades tienen?');
-    await solo.userMsg('Somos 4: 38, 36, 10 y 7');
-    await solo.botHtml('Con ese grupo te conviene esto:<br>'+PLAN_HTML, {typingMs:1200});
-    await solo.botMsg('Si querés, te dejo el link de contratación por acá mismo.');
+    await solo.userMsg('ah quiero saber si tenés coberturas de viajes', 1400);
+    await solo.botMsg('Sí — tenemos coberturas individuales, pareja y familiares. Según nuestra base: asistencia médica, cancelación y equipaje.', {typingMs:1700});
+    await solo.botMsg('Para recomendarte la mejor: ¿cuántas personas son y qué edades tienen?', {typingMs:1400});
+    await solo.userMsg('Somos 4: 38, 36, 10 y 7', 1300);
+    await solo.botHtml('Con ese grupo te conviene esto:<br>'+PLAN_HTML, {typingMs:1800});
+    await solo.botMsg('Si querés, te dejo el link de contratación por acá mismo.', {typingMs:1300});
 
     solo.setStatus('en línea');
     solo.stopTimer();
@@ -509,7 +578,7 @@
       const cursor=document.createElement('span'); cursor.className='cursor';
       for(let i=1;i<=finalText.length;i++){
         box.textContent = finalText.slice(0,i); box.appendChild(cursor);
-        await sleep(reduceMotion ? 1 : 18);
+        await sleep(reduceMotion ? 1 : 34);
       }
     };
   }
@@ -518,7 +587,7 @@
       const r = document.createElement('div'); r.className='f-opt';
       r.innerHTML = '<i></i><span>'+o+'</span>'; host.appendChild(r); return r;
     });
-    return async () => { await sleep(280); rows[pick].classList.add('checked'); rows[pick].querySelector('i').innerHTML='●'; };
+    return async () => { await sleep(480); rows[pick].classList.add('checked'); rows[pick].querySelector('i').innerHTML='●'; };
   }
 
   let fills = [];
@@ -536,7 +605,7 @@
     bar.style.width = (((i+1)/total)*100)+'%';
     nextBtn.textContent = (i===total-1) ? 'Enviar solicitud' : 'Continuar';
   }
-  async function pressNext(){ nextBtn.classList.add('pressed'); await sleep(200); nextBtn.classList.remove('pressed'); }
+  async function pressNext(){ nextBtn.classList.add('pressed'); await sleep(320); nextBtn.classList.remove('pressed'); }
 
   function openPopup(){
     popup.classList.add('open');
@@ -560,51 +629,51 @@
     track.style.transition='none'; goTo(0,total); track.offsetHeight; track.style.transition='';
 
     await hybrid.botMsg('¡Hola! 👋 Soy Seguros Aurora. Completá tu solicitud de cobertura acá — es rápido y seguro.', {
-      cta:'Completar solicitud', typingMs:800
+      cta:'Completar solicitud', typingMs:1300
     });
-    await sleep(550);
+    await sleep(900);
     const ctaEl = hybrid.body.querySelector('.cta-btn:last-of-type');
     if(ctaEl) ctaEl.classList.add('pressed');
-    await sleep(240);
+    await sleep(420);
     overlay.classList.add('open');
-    await sleep(480);
+    await sleep(780);
 
     for(let i=0;i<total;i++){
       goTo(i,total);
-      await sleep(380);
+      await sleep(620);
       await fills[i]();
-      await sleep(480);
+      await sleep(780);
       if(i<total-1){ await pressNext(); }
     }
-    await sleep(280);
+    await sleep(450);
     await pressNext();
-    await sleep(280);
+    await sleep(450);
     overlay.classList.remove('open');
-    await sleep(380);
-    await hybrid.systemMsg('✅ Solicitud enviada — gracias, Martina', 80);
+    await sleep(620);
+    await hybrid.systemMsg('✅ Solicitud enviada — gracias, Martina', 200);
 
-    await hybrid.userMsg('ah quiero saber si tenés coberturas de viajes', 900);
+    await hybrid.userMsg('ah quiero saber si tenés coberturas de viajes', 1400);
     await hybrid.botMsg('Sí, tenemos varias. Para recomendarte bien con la base de coberturas, seguimos por el canal web 👇\n\n<a class="wa-link" id="handoff-link">chat.segurosaurora.com/coberturas</a>', {
-      typingMs:1000, html:true
+      typingMs:1600, html:true
     });
 
-    await sleep(700);
+    await sleep(1100);
     const link = hybrid.body.querySelector('#handoff-link');
     if(link){
       link.style.background = 'rgba(83,189,235,.15)';
       link.style.borderRadius = '3px';
       link.style.padding = '0 2px';
     }
-    await sleep(320);
+    await sleep(520);
     openPopup();
     hybrid.setChannel('Webchat');
-    await sleep(500);
+    await sleep(900);
 
-    await web.botMsg('¡Hola Martina! Continuamos acá 🧭 Ya tengo tu solicitud. Sí: ofrecemos coberturas de viaje individuales, pareja y familiares (médica, cancelación, equipaje).', {typingMs:900, count:false});
-    await web.botMsg('Para recomendarte la mejor: ¿cuántas personas son y qué edades tienen?', {typingMs:700, count:false});
-    await web.userMsg('Somos 4: 38, 36, 10 y 7');
-    await web.botHtml('Según la base de coberturas, para ese grupo el mejor match es:<br>'+PLAN_HTML, {typingMs:1100, count:false});
-    await web.botMsg('Cuando quieras contratar, volvés a WhatsApp y lo cerramos con tus datos ya cargados.', {typingMs:800, count:false});
+    await web.botMsg('¡Hola Martina! Continuamos acá 🧭 Ya tengo tu solicitud. Sí: ofrecemos coberturas de viaje individuales, pareja y familiares (médica, cancelación, equipaje).', {typingMs:1500, count:false});
+    await web.botMsg('Para recomendarte la mejor: ¿cuántas personas son y qué edades tienen?', {typingMs:1200, count:false});
+    await web.userMsg('Somos 4: 38, 36, 10 y 7', 1300);
+    await web.botHtml('Según la base de coberturas, para ese grupo el mejor match es:<br>'+PLAN_HTML, {typingMs:1700, count:false});
+    await web.botMsg('Cuando quieras contratar, volvés a WhatsApp y lo cerramos con tus datos ya cargados.', {typingMs:1300, count:false});
 
     hybrid.setStatus('en línea');
     web.setStatus('en línea');
@@ -613,20 +682,56 @@
 
   /* ---------------- Control ---------------- */
   const playBtn = document.getElementById('playBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
   const hint = document.getElementById('hint');
   let running = false;
+  let runToken = 0;
+
+  function syncPauseUi(){
+    if(!running){
+      pauseBtn.disabled = true;
+      pauseBtn.innerHTML = '<span>⏸</span> Pausar';
+      return;
+    }
+    pauseBtn.disabled = false;
+    pauseBtn.innerHTML = paused ? '<span>▶</span> Continuar' : '<span>⏸</span> Pausar';
+  }
+
+  pauseBtn.addEventListener('click', () => {
+    if(!running) return;
+    setPaused(!paused);
+    syncPauseUi();
+    hint.textContent = paused
+      ? 'Pausado. Tocá Continuar para seguir.'
+      : 'Mirá: a la izquierda todo en WA; a la derecha el navegador a pantalla completa.';
+  });
 
   playBtn.addEventListener('click', async () => {
-    if(running) return;
+    if(running){
+      // If paused, resume; if playing, ignore (use pause btn)
+      if(paused){
+        setPaused(false);
+        syncPauseUi();
+        hint.textContent = 'Mirá: a la izquierda todo en WA; a la derecha el navegador a pantalla completa.';
+      }
+      return;
+    }
     running = true;
+    setPaused(false);
+    pausedTotal = 0;
+    const token = ++runToken;
     playBtn.disabled = true;
-    playBtn.innerHTML = '<span>⏸</span> Reproduciendo…';
-    hint.textContent = 'Mirá: a la izquierda todo en WA; a la derecha el salto al popup web.';
+    playBtn.innerHTML = '<span>▶</span> En curso…';
+    syncPauseUi();
+    hint.textContent = 'Mirá: a la izquierda todo en WA; a la derecha el navegador a pantalla completa.';
     await Promise.all([runSolo(), runHybrid()]);
+    if(token !== runToken) return;
+    running = false;
+    setPaused(false);
     playBtn.disabled = false;
     playBtn.innerHTML = '<span>↻</span> Reproducir de nuevo';
+    syncPauseUi();
     hint.textContent = 'Solo WA: 8+ msgs. Flow+Web: 2 msgs WA + recomendación en webchat.';
-    running = false;
   });
 })();
 </script>
