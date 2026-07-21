@@ -166,6 +166,7 @@
 
   <div class="controls">
     <button class="hn-btn hn-btn--primary" id="playBtn"><span>▶</span> Reproducir demo</button>
+    <button class="hn-btn hn-btn--ghost" id="pauseBtn" disabled><span>⏸</span> Pausar</button>
     <span class="hn-meta" id="hint">Arranca los 3 chats al mismo tiempo, en tiempo real.</span>
     <a class="hn-link hn-link--accent" href="flow-webchat.html" style="margin-left:auto">Demo Flow + Webchat →</a>
   </div>
@@ -314,7 +315,38 @@
 <script>
 (function(){
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const sleep = ms => new Promise(r => setTimeout(r, reduceMotion ? Math.min(ms,20) : ms));
+  const SPEED = 1.85;
+  let paused = false;
+  let pauseResolvers = [];
+  let pausedAt = 0;
+  let pausedTotal = 0;
+
+  function setPaused(v){
+    if(v === paused) return;
+    paused = v;
+    if(paused){
+      pausedAt = performance.now();
+    } else {
+      pausedTotal += performance.now() - pausedAt;
+      const q = pauseResolvers.splice(0);
+      q.forEach(r => r());
+    }
+  }
+  function waitWhilePaused(){
+    if(!paused) return Promise.resolve();
+    return new Promise(r => pauseResolvers.push(r));
+  }
+  async function sleep(ms){
+    const target = reduceMotion ? Math.min(ms, 20) : ms * SPEED;
+    let left = target;
+    while(left > 0){
+      await waitWhilePaused();
+      const slice = Math.min(40, left);
+      const t0 = performance.now();
+      await new Promise(r => setTimeout(r, slice));
+      left -= Math.max(slice, performance.now() - t0);
+    }
+  }
 
   const TICK = '<span class="tick"><svg viewBox="0 0 18 12" fill="none"><path d="M1 6.5l3 3L10 3" stroke="#53BDEB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 9.5L12.5 3" stroke="#53BDEB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
   const FLOW_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 9h8M8 13h5"/></svg>';
@@ -335,9 +367,18 @@
     let count = 0, startTs = null, timer = null, tk = clock(10,2);
 
     function scrollBottom(){ body.scrollTop = body.scrollHeight; }
+    function elapsedSec(){
+      if(startTs == null) return 0;
+      const freeze = paused ? (performance.now() - pausedAt) : 0;
+      return (performance.now() - startTs - pausedTotal - freeze) / 1000;
+    }
     function startTimer(){
       startTs = performance.now();
-      timer = setInterval(() => { timeEl.textContent = ((performance.now()-startTs)/1000).toFixed(1)+'s'; }, 100);
+      pausedTotal = 0;
+      timer = setInterval(() => {
+        if(paused) return;
+        timeEl.textContent = elapsedSec().toFixed(1)+'s';
+      }, 100);
     }
     function stopTimer(){ if(timer) clearInterval(timer); timer=null; }
     function setStatus(t){ if(statusEl) statusEl.textContent = t; }
@@ -354,25 +395,25 @@
       await sleep(ms);
       el.remove(); setStatus('en línea');
     }
-    async function botMsg(text, {typingMs=900, cta=null}={}){
+    async function botMsg(text, {typingMs=1400, cta=null}={}){
       await typing(typingMs);
       bump();
       const el = document.createElement('div');
       el.className='bubble bot';
       el.innerHTML = text.replace(/\n/g,'<br>') + '<span class="meta"><span class="ts">'+tk()+'</span></span>' + (cta ? '<div class="cta-btn">'+FLOW_ICON+cta+'</div>' : '');
       body.appendChild(el); scrollBottom();
-      await sleep(260);
+      await sleep(420);
       return el;
     }
-    async function userMsg(text, delay=680){
+    async function userMsg(text, delay=1100){
       await sleep(delay);
       const el = document.createElement('div');
       el.className='bubble user';
       el.innerHTML = text.replace(/\n/g,'<br>') + '<span class="meta"><span class="ts">'+tk()+'</span>'+TICK+'</span>';
       body.appendChild(el); scrollBottom();
-      await sleep(360);
+      await sleep(550);
     }
-    async function systemMsg(text, delay=500){
+    async function systemMsg(text, delay=700){
       await sleep(delay);
       const el = document.createElement('div');
       el.className='bubble system'; el.textContent = text;
@@ -393,17 +434,17 @@
   /* ---------------- Cascada ---------------- */
   async function runCascada(){
     cascada.reset(); cascada.startTimer();
-    await cascada.botMsg('¡Hola! Gracias por elegirnos en Hotel Vista Mar 🙌 Queremos conocer tu experiencia, te toma menos de 2 min.\n\n¿Qué tan satisfecho/a quedaste con el check-in?\n'+numbered(OPTS5)+'\n\nRespondé con el número.');
+    await cascada.botMsg('¡Hola! Gracias por elegirnos en Hotel Vista Mar 🙌 Queremos conocer tu experiencia, te toma menos de 2 min.\n\n¿Qué tan satisfecho/a quedaste con el check-in?\n'+numbered(OPTS5)+'\n\nRespondé con el número.', {typingMs:1500});
     await cascada.userMsg('4');
-    await cascada.botMsg('¿Cómo calificarías la atención de nuestro personal durante tu estadía?\n'+numbered(OPTS5));
+    await cascada.botMsg('¿Cómo calificarías la atención de nuestro personal durante tu estadía?\n'+numbered(OPTS5), {typingMs:1300});
     await cascada.userMsg('5');
-    await cascada.botMsg('¿Qué servicios utilizaste? (podés poner varios números separados por coma)\n'+numbered(SERVICIOS));
+    await cascada.botMsg('¿Qué servicios utilizaste? (podés poner varios números separados por coma)\n'+numbered(SERVICIOS), {typingMs:1300});
     await cascada.userMsg('1, 3, 7');
-    await cascada.botMsg('En general, ¿qué tan satisfecho/a quedaste con esos servicios?\n'+numbered(OPTS5));
+    await cascada.botMsg('En general, ¿qué tan satisfecho/a quedaste con esos servicios?\n'+numbered(OPTS5), {typingMs:1200});
     await cascada.userMsg('4');
-    await cascada.botMsg('De 0 a 10, ¿qué tan probable es que nos recomiendes a un familiar o amigo?');
+    await cascada.botMsg('De 0 a 10, ¿qué tan probable es que nos recomiendes a un familiar o amigo?', {typingMs:1200});
     await cascada.userMsg('9');
-    await cascada.botMsg('Por último, ¿algo que quieras destacar o sugerir? ✍️');
+    await cascada.botMsg('Por último, ¿algo que quieras destacar o sugerir? ✍️', {typingMs:1200});
     await cascada.userMsg('Todo muy bien, el desayuno podría tener más opciones dulces');
     cascada.setStatus('en línea'); cascada.stopTimer();
   }
@@ -411,17 +452,17 @@
   /* ---------------- Agente IA ---------------- */
   async function runAgente(){
     agente.reset(); agente.startTimer();
-    await agente.botMsg('¡Hola! Soy el asistente virtual de Hotel Vista Mar 😊 ¿Tenés 2 minutos para contarme cómo fue tu estadía? Para arrancar: ¿qué tan conforme quedaste con el check-in?');
+    await agente.botMsg('¡Hola! Soy el asistente virtual de Hotel Vista Mar 😊 ¿Tenés 2 minutos para contarme cómo fue tu estadía? Para arrancar: ¿qué tan conforme quedaste con el check-in?', {typingMs:1500});
     await agente.userMsg('Todo perfecto, fue muy rápido');
-    await agente.botMsg('¡Qué bueno! Y con la atención de nuestro personal durante tu estadía, ¿cómo la calificarías?');
+    await agente.botMsg('¡Qué bueno! Y con la atención de nuestro personal durante tu estadía, ¿cómo la calificarías?', {typingMs:1300});
     await agente.userMsg('Excelente, muy atentos en todo momento');
-    await agente.botMsg('Genial 🙌 ¿Qué servicios usaste? (restaurante, spa, piscina, desayuno...)');
+    await agente.botMsg('Genial 🙌 ¿Qué servicios usaste? (restaurante, spa, piscina, desayuno...)', {typingMs:1300});
     await agente.userMsg('Desayuno, piscina y el restaurante');
-    await agente.botMsg('¿Y en general qué tan conforme quedaste con esos servicios?');
+    await agente.botMsg('¿Y en general qué tan conforme quedaste con esos servicios?', {typingMs:1200});
     await agente.userMsg('Muy conforme, todo buenísimo');
-    await agente.botMsg('Última: del 0 al 10, ¿qué tan probable es que nos recomiendes a alguien?');
+    await agente.botMsg('Última: del 0 al 10, ¿qué tan probable es que nos recomiendes a alguien?', {typingMs:1200});
     await agente.userMsg('9, sin dudas');
-    await agente.botMsg('¡Excelente! ¿Algo que quieras destacar o sugerir para mejorar? ✍️');
+    await agente.botMsg('¡Excelente! ¿Algo que quieras destacar o sugerir para mejorar? ✍️', {typingMs:1200});
     await agente.userMsg('El desayuno podría tener más opciones dulces');
     agente.setStatus('en línea'); agente.stopTimer();
   }
@@ -448,21 +489,21 @@
       const r = document.createElement('div'); r.className='f-opt f-radio';
       r.innerHTML = '<i></i><span>'+o+'</span>'; host.appendChild(r); return r;
     });
-    return async () => { await sleep(320); rows[pick].classList.add('checked'); rows[pick].querySelector('i').innerHTML='●'; };
+    return async () => { await sleep(480); rows[pick].classList.add('checked'); rows[pick].querySelector('i').innerHTML='●'; };
   }
   function buildCheck(host, options, picks){
     const rows = options.map(o => {
       const r = document.createElement('div'); r.className='f-opt f-check';
       r.innerHTML = '<i></i><span>'+o+'</span>'; host.appendChild(r); return r;
     });
-    return async () => { for(const i of picks){ await sleep(200); rows[i].classList.add('checked'); rows[i].querySelector('i').innerHTML='✓'; } };
+    return async () => { for(const i of picks){ await sleep(320); rows[i].classList.add('checked'); rows[i].querySelector('i').innerHTML='✓'; } };
   }
   function buildNps(host, value){
     const row = document.createElement('div'); row.className='f-nps';
     const spans=[]; for(let i=0;i<=10;i++){ const s=document.createElement('span'); s.textContent=i; row.appendChild(s); spans.push(s); }
     host.appendChild(row);
     const scale=document.createElement('div'); scale.className='f-nps-scale'; scale.innerHTML='<span>Nada probable</span><span>Muy probable</span>'; host.appendChild(scale);
-    return async () => { await sleep(300); spans[value].classList.add('checked'); };
+    return async () => { await sleep(450); spans[value].classList.add('checked'); };
   }
   function buildText(host, finalText){
     const box = document.createElement('div'); box.className='f-text'; host.appendChild(box);
@@ -471,7 +512,7 @@
       const cursor=document.createElement('span'); cursor.className='cursor';
       for(let i=1;i<=finalText.length;i++){
         box.textContent = finalText.slice(0,i); box.appendChild(cursor);
-        await sleep(reduceMotion ? 1 : 20);
+        await sleep(reduceMotion ? 1 : 34);
       }
     };
   }
@@ -494,7 +535,7 @@
     bar.style.width = (((i+1)/total)*100)+'%';
     nextBtn.textContent = (i===total-1) ? 'Enviar respuestas' : 'Continuar';
   }
-  async function pressNext(){ nextBtn.classList.add('pressed'); await sleep(200); nextBtn.classList.remove('pressed'); }
+  async function pressNext(){ nextBtn.classList.add('pressed'); await sleep(320); nextBtn.classList.remove('pressed'); }
 
   async function runFlow(){
     flow.reset(); flow.startTimer();
@@ -502,46 +543,81 @@
     const total = buildFlowScreens();
     track.style.transition='none'; goTo(0,total); track.offsetHeight; track.style.transition='';
 
-    await flow.botMsg('¡Hola! 👋 Gracias por elegirnos en Hotel Vista Mar. Nos encantaría conocer tu experiencia — te toma menos de 2 minutos ⏱️', { cta:'Completar encuesta' });
-    await sleep(650);
+    await flow.botMsg('¡Hola! 👋 Gracias por elegirnos en Hotel Vista Mar. Nos encantaría conocer tu experiencia — te toma menos de 2 minutos ⏱️', { cta:'Completar encuesta', typingMs:1300 });
+    await sleep(900);
     const ctaEl = flow.body.querySelector('.cta-btn:last-of-type');
     if(ctaEl) ctaEl.classList.add('pressed');
-    await sleep(260);
+    await sleep(420);
     overlay.classList.add('open');
-    await sleep(520);
+    await sleep(780);
 
     for(let i=0;i<total;i++){
       goTo(i,total);
-      await sleep(420);
+      await sleep(620);
       await fills[i]();
-      await sleep(560);
+      await sleep(780);
       if(i<total-1){ await pressNext(); }
     }
-    await sleep(350);
+    await sleep(450);
     await pressNext();
-    await sleep(320);
+    await sleep(450);
     overlay.classList.remove('open');
-    await sleep(430);
-    await flow.systemMsg('✅ Respuesta enviada — ¡gracias por tu tiempo!', 120);
+    await sleep(620);
+    await flow.systemMsg('✅ Respuesta enviada — ¡gracias por tu tiempo!', 200);
     flow.setStatus('en línea'); flow.stopTimer();
   }
 
   /* ---------------- Control ---------------- */
   const playBtn = document.getElementById('playBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
   const hint = document.getElementById('hint');
   let running = false;
+  let runToken = 0;
+
+  function syncPauseUi(){
+    if(!running){
+      pauseBtn.disabled = true;
+      pauseBtn.innerHTML = '<span>⏸</span> Pausar';
+      return;
+    }
+    pauseBtn.disabled = false;
+    pauseBtn.innerHTML = paused ? '<span>▶</span> Continuar' : '<span>⏸</span> Pausar';
+  }
+
+  pauseBtn.addEventListener('click', () => {
+    if(!running) return;
+    setPaused(!paused);
+    syncPauseUi();
+    hint.textContent = paused
+      ? 'Pausado. Tocá Continuar para seguir.'
+      : 'Mirá cómo suben los mensajes salientes de cada columna.';
+  });
 
   playBtn.addEventListener('click', async () => {
-    if(running) return;
+    if(running){
+      if(paused){
+        setPaused(false);
+        syncPauseUi();
+        hint.textContent = 'Mirá cómo suben los mensajes salientes de cada columna.';
+      }
+      return;
+    }
     running = true;
+    setPaused(false);
+    pausedTotal = 0;
+    const token = ++runToken;
     playBtn.disabled = true;
-    playBtn.innerHTML = '<span>⏸</span> Reproduciendo…';
+    playBtn.innerHTML = '<span>▶</span> En curso…';
+    syncPauseUi();
     hint.textContent = 'Mirá cómo suben los mensajes salientes de cada columna.';
     await Promise.all([runCascada(), runAgente(), runFlow()]);
+    if(token !== runToken) return;
+    running = false;
+    setPaused(false);
     playBtn.disabled = false;
     playBtn.innerHTML = '<span>↻</span> Reproducir de nuevo';
+    syncPauseUi();
     hint.textContent = 'Cascada y Agente IA: 6 mensajes cada uno. Flow: 1 mensaje.';
-    running = false;
   });
 })();
 </script>

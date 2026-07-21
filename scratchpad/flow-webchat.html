@@ -181,6 +181,28 @@
   .plan-card ul{ margin:6px 0 0; padding-left:16px; color:var(--wa-ink-muted); }
   .plan-card li{ margin:2px 0; }
 
+  .kb-block{
+    margin:4px 0 2px; padding:10px 11px; border-radius:10px;
+    background:rgba(32,44,51,.95); border:1px solid rgba(255,255,255,.1);
+    color:var(--wa-ink); font-size:12px; line-height:1.4;
+  }
+  .kb-block .kb-label{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:9.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:#8fd3c6; margin-bottom:8px;
+  }
+  .kb-item{
+    padding:8px 0; border-top:1px solid rgba(255,255,255,.08);
+  }
+  .kb-item:first-of-type{ border-top:none; padding-top:0; }
+  .kb-item .kb-name{ font-weight:700; color:#fff; font-size:12.5px; margin-bottom:2px; }
+  .kb-item .kb-meta{ color:var(--wa-ink-muted); font-size:11.5px; }
+  .kb-item.hl{
+    margin-top:4px; padding:8px 9px; border-radius:8px; border:1px solid rgba(241,92,44,.4);
+    background:rgba(241,92,44,.12);
+  }
+  .kb-item.hl .kb-name{ color:#ffb999; }
+
   .compare{ margin-top:56px; }
   .compare .hn-eyebrow{ color:var(--hn-muted); }
   .compare h2{ margin:8px 0 18px; }
@@ -526,6 +548,23 @@
       '</ul>' +
     '</div>';
 
+  const KB_HTML =
+    '<div class="kb-block">' +
+      '<div class="kb-label">📚 Base de conocimiento · Coberturas</div>' +
+      '<div class="kb-item">' +
+        '<div class="kb-name">Individual</div>' +
+        '<div class="kb-meta">1 persona · médica hasta USD 50.000 · cancelación · equipaje</div>' +
+      '</div>' +
+      '<div class="kb-item">' +
+        '<div class="kb-name">Pareja</div>' +
+        '<div class="kb-meta">2 adultos · misma cobertura · descuento 15%</div>' +
+      '</div>' +
+      '<div class="kb-item hl">' +
+        '<div class="kb-name">Familiar</div>' +
+        '<div class="kb-meta">Hasta 4 · menores sin cargo extra · franquicia reducida · asistencia 24/7</div>' +
+      '</div>' +
+    '</div>';
+
   /* ---------------- Solo WhatsApp ---------------- */
   async function runSolo(){
     solo.reset();
@@ -542,8 +581,8 @@
     await solo.userMsg('12/08 al 28/08');
     await solo.botMsg('Perfecto, ya registré tu solicitud ✅', {typingMs:1200});
 
-    await solo.userMsg('ah quiero saber si tenés coberturas de viajes', 1400);
-    await solo.botMsg('Sí — tenemos coberturas individuales, pareja y familiares. Según nuestra base: asistencia médica, cancelación y equipaje.', {typingMs:1700});
+    await solo.userMsg('cobertura de viajes para familias?', 1400);
+    await solo.botMsg('Sí — en la base tenemos Individual, Pareja y Familiar. Familiar cubre hasta 4 personas, con asistencia médica, cancelación y equipaje.', {typingMs:1700});
     await solo.botMsg('Para recomendarte la mejor: ¿cuántas personas son y qué edades tienen?', {typingMs:1400});
     await solo.userMsg('Somos 4: 38, 36, 10 y 7', 1300);
     await solo.botHtml('Con ese grupo te conviene esto:<br>'+PLAN_HTML, {typingMs:1800});
@@ -652,8 +691,8 @@
     await sleep(620);
     await hybrid.systemMsg('✅ Solicitud enviada — gracias, Martina', 200);
 
-    await hybrid.userMsg('ah quiero saber si tenés coberturas de viajes', 1400);
-    await hybrid.botMsg('Sí, tenemos varias. Para recomendarte bien con la base de coberturas, seguimos por el canal web 👇\n\n<a class="wa-link" id="handoff-link">chat.segurosaurora.com/coberturas</a>', {
+    await hybrid.userMsg('cobertura de viajes para familias?', 1400);
+    await hybrid.botMsg('Buena pregunta — para mostrarte bien las opciones de la base de coberturas, seguimos por el canal web 👇\n\n<a class="wa-link" id="handoff-link">chat.segurosaurora.com/coberturas</a>', {
       typingMs:1600, html:true
     });
 
@@ -669,10 +708,11 @@
     hybrid.setChannel('Webchat');
     await sleep(900);
 
-    await web.botMsg('¡Hola Martina! Continuamos acá 🧭 Ya tengo tu solicitud. Sí: ofrecemos coberturas de viaje individuales, pareja y familiares (médica, cancelación, equipaje).', {typingMs:1500, count:false});
-    await web.botMsg('Para recomendarte la mejor: ¿cuántas personas son y qué edades tienen?', {typingMs:1200, count:false});
+    await web.botMsg('¡Hola Martina! Continuamos acá 🧭 Traje la ficha de coberturas desde la base de conocimiento:', {typingMs:1400, count:false});
+    await web.botHtml(KB_HTML, {typingMs:1600, count:false});
+    await web.botMsg('Para familias suele cerrar mejor el plan Familiar. ¿Cuántas personas son y qué edades tienen?', {typingMs:1300, count:false});
     await web.userMsg('Somos 4: 38, 36, 10 y 7', 1300);
-    await web.botHtml('Según la base de coberturas, para ese grupo el mejor match es:<br>'+PLAN_HTML, {typingMs:1700, count:false});
+    await web.botHtml('Con ese grupo, el match de la KB es este:<br>'+PLAN_HTML, {typingMs:1700, count:false});
     await web.botMsg('Cuando quieras contratar, volvés a WhatsApp y lo cerramos con tus datos ya cargados.', {typingMs:1300, count:false});
 
     hybrid.setStatus('en línea');
