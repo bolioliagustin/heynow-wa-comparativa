@@ -8,22 +8,26 @@
 <link rel="stylesheet" href="assets/css/heynow.css">
 <link rel="stylesheet" href="assets/css/demo.css">
 <style>
-  .page{ max-width:1400px; margin:0 auto; padding:30px clamp(16px,4vw,44px) 80px; }
-  .hero{ display:flex; flex-direction:column; gap:10px; max-width:80ch; margin-bottom:8px; }
+  .page{ max-width:1120px; margin:0 auto; padding:30px clamp(16px,4vw,44px) 80px; }
+  .hero{ display:flex; flex-direction:column; gap:10px; max-width:70ch; margin-bottom:8px; }
   .hero .hn-h1{ margin-top:2px; }
 
-  .toolbar{ display:flex; align-items:center; gap:10px; margin:20px 0 24px; flex-wrap:wrap; padding:14px 16px; background:var(--hn-surface); border:1px solid var(--hn-border); border-radius:14px; }
-  .toolbar select, .toolbar input[type="file"]{ font:inherit; background:var(--hn-surface-2); color:var(--hn-text); border:1px solid var(--hn-border); border-radius:10px; padding:9px 12px; font-size:13px; }
-  .toolbar .sep{ width:1px; height:26px; background:var(--hn-border); margin:0 2px; }
+  .toolbar{ display:flex; align-items:center; gap:12px 16px; margin:20px 0 24px; flex-wrap:wrap; padding:14px 16px; background:var(--hn-surface); border:1px solid var(--hn-border); border-radius:14px; }
+  .toolbar-group{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .toolbar .sep{ width:1px; height:26px; background:var(--hn-border); flex:none; }
   .toolbar .hn-btn{ padding:9px 14px; font-size:13px; }
-  .toolbar-msg{ font-size:12px; color:var(--hn-muted); margin-left:auto; }
+  .toolbar-msg{ font-size:12px; color:var(--hn-muted); margin-left:auto; min-width:10ch; }
 
-  .builder-grid{ display:grid; grid-template-columns:minmax(360px,460px) 1fr; gap:24px; align-items:start; }
-  @media (max-width:1080px){ .builder-grid{ grid-template-columns:1fr; } }
-
-  .panel{ background:var(--hn-surface); border:1px solid var(--hn-border); border-radius:16px; padding:18px; }
+  .panel{ background:var(--hn-surface); border:1px solid var(--hn-border); border-radius:16px; padding:22px; }
   .panel h2{ font-size:15px; margin:0 0 4px; }
   .panel-sub{ font-size:12px; color:var(--hn-faint); margin:0 0 14px; }
+
+  .panel select, .toolbar select{
+    font:inherit; font-size:13px; background:var(--hn-surface-2); color:var(--hn-text);
+    border:1px solid var(--hn-border); border-radius:9px; padding:9px 12px;
+    box-sizing:border-box; color-scheme:dark; max-width:100%;
+  }
+  .panel select option, .toolbar select option{ background:var(--hn-surface); color:var(--hn-text); }
 
   .field-row{ display:flex; flex-direction:column; gap:5px; margin-bottom:12px; }
   .field-row label{ font-size:11.5px; font-weight:700; letter-spacing:.02em; color:var(--hn-muted); text-transform:uppercase; }
@@ -31,46 +35,40 @@
   .field-row input[type="text"], .field-row input[type="number"], .field-row input[type="color"], .field-row textarea, .field-row select{
     font:inherit; font-size:13px; background:var(--hn-surface-2); color:var(--hn-text);
     border:1px solid var(--hn-border); border-radius:9px; padding:9px 10px; width:100%; box-sizing:border-box;
+    color-scheme:dark;
   }
   .field-row textarea{ resize:vertical; min-height:56px; line-height:1.4; }
   .field-row input[type="color"]{ padding:3px; height:36px; cursor:pointer; }
   .field-2col{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media (max-width:640px){ .field-2col{ grid-template-columns:1fr; } }
   .field-check{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--hn-text); flex-direction:row; }
   .field-check label{ text-transform:none; font-weight:600; letter-spacing:0; color:var(--hn-text); }
   .field-check input{ width:16px; height:16px; }
 
   .card-box{ border:1px solid var(--hn-border); border-radius:12px; padding:14px; margin-bottom:12px; background:var(--hn-surface-2); }
   .card-box + .card-box{ margin-top:12px; }
-  .card-box-head{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .card-box-head{ display:flex; flex-direction:column; gap:10px; margin-bottom:12px; }
+  .card-box-head-row{ display:flex; align-items:center; gap:10px; }
   .card-box-head .tag{ font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--hn-faint); }
-  .card-box-head select{ flex:1; }
-  .icon-btn{ width:28px; height:28px; flex:none; border-radius:8px; border:1px solid var(--hn-border); background:var(--hn-surface); color:var(--hn-muted); font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .card-box-head-actions{ display:flex; align-items:center; gap:6px; margin-left:auto; }
+  .card-box-head select{ width:100%; }
+
+  .icon-btn{ width:36px; height:36px; flex:none; border-radius:10px; border:1px solid var(--hn-border); background:var(--hn-surface); color:var(--hn-muted); font-size:15px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; line-height:1; }
   .icon-btn:hover{ color:var(--hn-text); background:var(--hn-border); }
   .icon-btn.danger:hover{ color:#ff6b6b; border-color:#ff6b6b; }
 
-  .column-box{ border:1.5px solid var(--hn-border); border-radius:14px; padding:14px; margin-bottom:16px; }
-  .column-box-head{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
-  .column-box-head input[type="text"]{ flex:1; font-weight:700; }
-  .column-box-head input[type="color"]{ width:36px; height:36px; flex:none; padding:2px; }
+  .column-box{ border:1.5px solid var(--hn-border); border-radius:14px; padding:16px; margin-bottom:18px; }
+  .column-box-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+  .column-box-head input[type="text"]{ flex:1; min-width:160px; font-weight:700; font:inherit; font-size:14px; background:var(--hn-surface-2); color:var(--hn-text); border:1px solid var(--hn-border); border-radius:9px; padding:9px 12px; color-scheme:dark; }
+  .column-box-head input[type="color"]{ width:36px; height:36px; flex:none; padding:2px; border-radius:9px; border:1px solid var(--hn-border); background:var(--hn-surface); cursor:pointer; }
+  .column-box-head .card-box-head-actions{ margin-left:0; }
 
-  .add-row{ display:flex; gap:8px; margin-top:6px; }
-  .add-row select{ flex:1; }
+  .add-row{ display:flex; gap:8px; margin-top:6px; align-items:stretch; }
+  .add-row select{ flex:1; min-width:0; }
   .add-row .hn-btn{ padding:9px 14px; font-size:12.5px; white-space:nowrap; }
 
   .blocks-list{ display:flex; flex-direction:column; gap:0; }
   .screens-list{ display:flex; flex-direction:column; gap:0; }
-
-  .preview-wrap{ position:sticky; top:16px; }
-  .preview-controls{ display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
-  .preview-controls .hn-meta{ margin-left:auto; }
-  .preview-host .phones-grid{ min-height:200px; }
-  .empty-hint{ color:var(--hn-faint); font-size:13px; padding:40px 10px; text-align:center; border:1.5px dashed var(--hn-border); border-radius:14px; }
-
-  .saved-list{ max-height:260px; overflow-y:auto; }
-  .saved-item{ display:flex; align-items:center; gap:8px; padding:9px 4px; border-bottom:1px solid var(--hn-border); font-size:13px; }
-  .saved-item:last-child{ border-bottom:none; }
-  .saved-item .name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .saved-item button{ font-size:11.5px; }
 
   dialog.hn-dialog{ border:1px solid var(--hn-border); border-radius:16px; background:var(--hn-surface); color:var(--hn-text); padding:20px; max-width:480px; width:92vw; }
   dialog.hn-dialog::backdrop{ background:rgba(0,0,0,.6); }
@@ -96,66 +94,59 @@
   <header class="hero">
     <span class="hn-eyebrow">Playground · Creador de demos</span>
     <h1 class="hn-display hn-h1">Armá tu propia comparativa de WhatsApp.</h1>
-    <p class="hn-sub">Elegí columnas, escribí los mensajes, armá el WhatsApp Flow y el handoff al canal web. La previsualización usa exactamente las mismas animaciones que las demos de Heynow.</p>
+    <p class="hn-sub">Elegí columnas, escribí los mensajes, armá el WhatsApp Flow y el handoff al canal web. Cuando quieras verla correr, abrila en el player con el mismo motor de animación que las demos de Heynow.</p>
   </header>
 
   <div class="toolbar">
-    <button class="hn-btn hn-btn--ghost" id="btnNew">Nueva</button>
-    <select id="templateSelect">
-      <option value="">Empezar desde plantilla…</option>
-      <option value="cascadaVsFlow">Cascada vs Flow</option>
-      <option value="flowWebchat">Flow + Webchat</option>
-      <option value="blank">Demo en blanco</option>
-    </select>
-    <div class="sep"></div>
-    <button class="hn-btn hn-btn--ghost" id="btnSave">Guardar</button>
-    <select id="savedSelect">
-      <option value="">Cargar demo guardada…</option>
-    </select>
-    <div class="sep"></div>
-    <button class="hn-btn hn-btn--ghost" id="btnExport">Exportar JSON</button>
-    <label class="hn-btn hn-btn--ghost" style="cursor:pointer;">
-      Importar JSON
-      <input type="file" id="importFile" accept="application/json" style="display:none;">
-    </label>
-    <div class="sep"></div>
-    <button class="hn-btn hn-btn--primary" id="btnShare">Copiar link</button>
-    <a class="hn-link hn-link--accent" id="openPlayerLink" href="player.html" target="_blank" rel="noopener">Abrir en player →</a>
+    <div class="toolbar-group">
+      <button class="hn-btn hn-btn--ghost" id="btnNew">Nueva</button>
+      <select id="templateSelect" aria-label="Plantilla">
+        <option value="">Empezar desde plantilla…</option>
+        <option value="cascadaVsFlow">Cascada vs Flow</option>
+        <option value="flowWebchat">Flow + Webchat</option>
+        <option value="blank">Demo en blanco</option>
+      </select>
+    </div>
+    <div class="sep" aria-hidden="true"></div>
+    <div class="toolbar-group">
+      <button class="hn-btn hn-btn--ghost" id="btnSave">Guardar</button>
+      <select id="savedSelect" aria-label="Demos guardadas">
+        <option value="">Cargar demo guardada…</option>
+      </select>
+    </div>
+    <div class="sep" aria-hidden="true"></div>
+    <div class="toolbar-group">
+      <button class="hn-btn hn-btn--ghost" id="btnExport">Exportar JSON</button>
+      <label class="hn-btn hn-btn--ghost" style="cursor:pointer;">
+        Importar JSON
+        <input type="file" id="importFile" accept="application/json" style="display:none;">
+      </label>
+    </div>
+    <div class="sep" aria-hidden="true"></div>
+    <div class="toolbar-group">
+      <button class="hn-btn hn-btn--primary" id="btnShare">Copiar link</button>
+      <a class="hn-link hn-link--accent" id="openPlayerLink" href="player.html" target="_blank" rel="noopener">Abrir en player →</a>
+    </div>
     <span class="toolbar-msg" id="toolbarMsg"></span>
   </div>
 
-  <div class="builder-grid">
-    <!-- ============ FORM ============ -->
-    <section class="panel" id="formPanel">
-      <div class="field-row" style="margin-bottom:16px;">
-        <label for="metaTitle">Título de la demo</label>
-        <input type="text" id="metaTitle">
-      </div>
-      <div class="field-row" style="margin-bottom:18px;">
-        <label for="metaSubtitle">Subtítulo</label>
-        <textarea id="metaSubtitle" rows="2"></textarea>
-      </div>
+  <section class="panel" id="formPanel">
+    <div class="field-row" style="margin-bottom:16px;">
+      <label for="metaTitle">Título de la demo</label>
+      <input type="text" id="metaTitle">
+    </div>
+    <div class="field-row" style="margin-bottom:18px;">
+      <label for="metaSubtitle">Subtítulo</label>
+      <textarea id="metaSubtitle" rows="2"></textarea>
+    </div>
 
-      <h2>Columnas</h2>
-      <p class="panel-sub">Cada columna es un teléfono que corre en paralelo. Un bloque "WhatsApp Flow" abre el formulario nativo; un bloque "Handoff" salta al navegador webchat.</p>
-      <div id="columnsList"></div>
-      <div class="add-row">
-        <button class="hn-btn hn-btn--ghost" id="btnAddColumn" style="width:100%;">+ Agregar columna</button>
-      </div>
-    </section>
-
-    <!-- ============ PREVIEW ============ -->
-    <section class="preview-wrap">
-      <div class="panel">
-        <div class="preview-controls">
-          <button class="hn-btn hn-btn--primary" id="playBtn"><span>▶</span> Reproducir demo</button>
-          <button class="hn-btn hn-btn--ghost" id="pauseBtn" disabled><span>⏸</span> Pausar</button>
-          <span class="hn-meta" id="previewHint">La previsualización se actualiza mientras editás.</span>
-        </div>
-        <div class="preview-host" id="previewHost"></div>
-      </div>
-    </section>
-  </div>
+    <h2>Columnas</h2>
+    <p class="panel-sub">Cada columna es un teléfono que corre en paralelo en el player. Un bloque "WhatsApp Flow" abre el formulario nativo; un bloque "Handoff" salta al navegador webchat.</p>
+    <div id="columnsList"></div>
+    <div class="add-row">
+      <button class="hn-btn hn-btn--ghost" id="btnAddColumn" style="width:100%;">+ Agregar columna</button>
+    </div>
+  </section>
 </main>
 
 <dialog class="hn-dialog" id="saveDialog">
@@ -385,9 +376,11 @@
     });
     const head = el('div', {class:'column-box-head'}, [
       colorInput, nameInput,
-      iconBtn('↑', 'Subir', false, function(){ moveItem(state.demo.columns, ci, -1); renderAll(); }),
-      iconBtn('↓', 'Bajar', false, function(){ moveItem(state.demo.columns, ci, 1); renderAll(); }),
-      iconBtn('✕', 'Eliminar columna', true, function(){ state.demo.columns.splice(ci,1); renderAll(); })
+      el('div', {class:'card-box-head-actions'}, [
+        iconBtn('↑', 'Subir', false, function(){ moveItem(state.demo.columns, ci, -1); renderAll(); }),
+        iconBtn('↓', 'Bajar', false, function(){ moveItem(state.demo.columns, ci, 1); renderAll(); }),
+        iconBtn('✕', 'Eliminar columna', true, function(){ state.demo.columns.splice(ci,1); renderAll(); })
+      ])
     ]);
     box.appendChild(head);
 
@@ -460,11 +453,15 @@
       }
     });
     const head = el('div', {class:'card-box-head'}, [
-      el('span', {class:'tag', text:'Bloque '+(bi+1)}),
-      typeSel,
-      iconBtn('↑','Subir', false, function(){ moveItem(state.demo.columns[ci].script, bi, -1); renderAll(); }),
-      iconBtn('↓','Bajar', false, function(){ moveItem(state.demo.columns[ci].script, bi, 1); renderAll(); }),
-      iconBtn('✕','Eliminar bloque', true, function(){ state.demo.columns[ci].script.splice(bi,1); renderAll(); })
+      el('div', {class:'card-box-head-row'}, [
+        el('span', {class:'tag', text:'Bloque '+(bi+1)}),
+        el('div', {class:'card-box-head-actions'}, [
+          iconBtn('↑','Subir', false, function(){ moveItem(state.demo.columns[ci].script, bi, -1); renderAll(); }),
+          iconBtn('↓','Bajar', false, function(){ moveItem(state.demo.columns[ci].script, bi, 1); renderAll(); }),
+          iconBtn('✕','Eliminar bloque', true, function(){ state.demo.columns[ci].script.splice(bi,1); renderAll(); })
+        ])
+      ]),
+      typeSel
     ]);
     box.appendChild(head);
 
@@ -539,7 +536,10 @@
         else col.script[bi].card = { style:'plan', title:'', description:'', items:[] };
         renderAll();
       });
-      cardBox.appendChild(el('div', {class:'card-box-head'}, [el('span', {class:'tag', text:'Tarjeta'}), styleSel]));
+      cardBox.appendChild(el('div', {class:'card-box-head'}, [
+        el('div', {class:'card-box-head-row'}, [el('span', {class:'tag', text:'Tarjeta'})]),
+        styleSel
+      ]));
 
       if(block.card.style === 'kb'){
         cardBox.appendChild(fieldRow('Etiqueta', '', textInput(base+'.card.label')));
@@ -596,11 +596,14 @@
     const base = blockBase+'.screens.'+si;
     const box = el('div', {class:'card-box'});
     box.appendChild(el('div', {class:'card-box-head'}, [
-      el('span', {class:'tag', text:'Pantalla '+(si+1)}),
-      el('span', {style:'flex:1;'}),
-      iconBtn('↑','Subir', false, function(){ moveItem(state.demo.columns[ci].script[bi].screens, si, -1); renderAll(); }),
-      iconBtn('↓','Bajar', false, function(){ moveItem(state.demo.columns[ci].script[bi].screens, si, 1); renderAll(); }),
-      iconBtn('✕','Eliminar pantalla', true, function(){ state.demo.columns[ci].script[bi].screens.splice(si,1); renderAll(); })
+      el('div', {class:'card-box-head-row'}, [
+        el('span', {class:'tag', text:'Pantalla '+(si+1)}),
+        el('div', {class:'card-box-head-actions'}, [
+          iconBtn('↑','Subir', false, function(){ moveItem(state.demo.columns[ci].script[bi].screens, si, -1); renderAll(); }),
+          iconBtn('↓','Bajar', false, function(){ moveItem(state.demo.columns[ci].script[bi].screens, si, 1); renderAll(); }),
+          iconBtn('✕','Eliminar pantalla', true, function(){ state.demo.columns[ci].script[bi].screens.splice(si,1); renderAll(); })
+        ])
+      ])
     ]));
     box.appendChild(fieldRow('Pregunta', '', textInput(base+'.question')));
     box.appendChild(fieldRow('Ayuda', 'opcional', textInput(base+'.help')));
@@ -641,58 +644,10 @@
     renderColumnsList();
   }
 
-  let previewController = null;
-  let previewTimer = null;
-  function schedulePreviewRefresh(){
-    if(previewTimer) clearTimeout(previewTimer);
-    previewTimer = setTimeout(refreshPreview, 350);
-  }
-  function refreshPreview(){
-    const host = document.getElementById('previewHost');
-    if(previewController) previewController.destroy();
-    if(!state.demo.columns || !state.demo.columns.length){
-      host.innerHTML = '<div class="empty-hint">Agregá al menos una columna para ver la previsualización.</div>';
-      previewController = null;
-      syncPlaybackUi('idle');
-      return;
-    }
-    previewController = DemoEngine.mount(host, state.demo, {
-      onStateChange: function(s){ syncPlaybackUi(s); }
-    });
-    syncPlaybackUi('idle');
-  }
-
+  function schedulePreviewRefresh(){ /* preview vive en el player */ }
   function renderAll(){
     renderForm();
-    refreshPreview();
   }
-
-  /* ---------------- Reproducción ---------------- */
-  const playBtn = document.getElementById('playBtn');
-  const pauseBtn = document.getElementById('pauseBtn');
-  const previewHint = document.getElementById('previewHint');
-
-  function syncPlaybackUi(s){
-    if(s === 'running'){
-      playBtn.disabled = true; playBtn.innerHTML = '<span>▶</span> En curso…';
-      pauseBtn.disabled = false; pauseBtn.innerHTML = '<span>⏸</span> Pausar';
-      previewHint.textContent = 'Reproduciendo…';
-    } else if(s === 'paused'){
-      playBtn.disabled = true;
-      pauseBtn.disabled = false; pauseBtn.innerHTML = '<span>▶</span> Continuar';
-      previewHint.textContent = 'Pausado.';
-    } else if(s === 'done'){
-      playBtn.disabled = false; playBtn.innerHTML = '<span>↻</span> Reproducir de nuevo';
-      pauseBtn.disabled = true; pauseBtn.innerHTML = '<span>⏸</span> Pausar';
-      previewHint.textContent = 'Demo terminada.';
-    } else {
-      playBtn.disabled = false; playBtn.innerHTML = '<span>▶</span> Reproducir demo';
-      pauseBtn.disabled = true; pauseBtn.innerHTML = '<span>⏸</span> Pausar';
-      previewHint.textContent = 'La previsualización se actualiza mientras editás.';
-    }
-  }
-  playBtn.addEventListener('click', function(){ if(previewController) previewController.play(); });
-  pauseBtn.addEventListener('click', function(){ if(previewController) previewController.togglePause(); });
 
   /* ---------------- Toolbar: plantillas / nueva ---------------- */
   document.getElementById('btnNew').addEventListener('click', function(){
@@ -765,11 +720,17 @@
     e.target.value = '';
   });
 
-  /* ---------------- Toolbar: compartir ---------------- */
+  /* ---------------- Toolbar: compartir / player ---------------- */
+  function openInPlayer(){
+    showToolbarMsg('Abriendo player…');
+    return DemoStore.buildShareUrl(state.demo).then(function(url){
+      document.getElementById('openPlayerLink').href = url;
+      return url;
+    });
+  }
   document.getElementById('btnShare').addEventListener('click', function(){
     showToolbarMsg('Generando link…');
-    DemoStore.buildShareUrl(state.demo).then(function(url){
-      document.getElementById('openPlayerLink').href = url;
+    openInPlayer().then(function(url){
       if(navigator.clipboard && navigator.clipboard.writeText){
         navigator.clipboard.writeText(url).then(function(){
           showToolbarMsg('Link copiado al portapapeles.');
@@ -781,6 +742,15 @@
       }
     }).catch(function(err){
       showToolbarMsg('No se pudo generar el link: ' + err.message);
+    });
+  });
+  document.getElementById('openPlayerLink').addEventListener('click', function(e){
+    e.preventDefault();
+    openInPlayer().then(function(url){
+      window.open(url, '_blank', 'noopener');
+      showToolbarMsg('Demo abierta en el player.');
+    }).catch(function(err){
+      showToolbarMsg('No se pudo abrir el player: ' + err.message);
     });
   });
 
@@ -795,11 +765,9 @@
   /* ---------------- Meta fields ---------------- */
   document.getElementById('metaTitle').addEventListener('input', function(e){
     state.demo.title = e.target.value;
-    schedulePreviewRefresh();
   });
   document.getElementById('metaSubtitle').addEventListener('input', function(e){
     state.demo.subtitle = e.target.value;
-    schedulePreviewRefresh();
   });
   document.getElementById('btnAddColumn').addEventListener('click', function(){
     state.demo.columns = state.demo.columns || [];
