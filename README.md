@@ -8,6 +8,18 @@ Demos interactivas de WhatsApp para Heynow.
 | --- | --- |
 | `scratchpad/index.html` | Cascada vs Agente IA vs WhatsApp Flow (misma encuesta) |
 | `scratchpad/flow-webchat.html` | Solo WhatsApp vs Flow + webchat (transaccional en WA, consultivo en canal web) |
+| `scratchpad/builder.html` | Playground: creador de demos por columnas/bloques, con preview en vivo |
+| `scratchpad/player.html` | Reproductor de una demo compartida por link (`#d=...`) |
+
+## Playground (creador de demos)
+
+`scratchpad/builder.html` permite armar demos comparativas (columnas de chat WhatsApp, WhatsApp Flow y handoff a un canal web) sin tocar código, con las mismas animaciones que las demos anteriores. No usa backend:
+
+- Se guarda en el `localStorage` del navegador (botón **Guardar** / selector de demos guardadas).
+- Se puede **exportar/importar** como archivo `.json`.
+- Se puede **compartir por link**: el botón **Copiar link** codifica la demo completa en la URL (`player.html#d=...`), que cualquiera puede abrir sin necesitar el builder.
+
+El motor de animación (`assets/js/demo-engine.js`) y los estilos (`assets/css/demo.css`) son compartidos por `builder.html` y `player.html`.
 
 ## GitHub Pages
 
@@ -28,8 +40,8 @@ git push -u origin main
 
 `https://TU_USUARIO.github.io/TU_REPO/`
 
-URLs de demos: `/` y `/flow-webchat.html`.
+URLs de demos: `/`, `/flow-webchat.html`, `/builder.html` y `/player.html`.
 
 ### Local
 
-Abre `scratchpad/index.html` o `scratchpad/flow-webchat.html` en el navegador (o sirve la carpeta `scratchpad`).
+Abre cualquiera de los HTML de `scratchpad/` en el navegador (o sirve la carpeta `scratchpad`).
