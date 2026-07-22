@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heynow · Playground · Creador de demos</title>
+<link rel="icon" href="assets/brand/heynow-iso.png">
+<link rel="stylesheet" href="assets/css/heynow.css">
+<link rel="stylesheet" href="assets/css/demo.css">
+<style>
+  .page{ max-width:1400px; margin:0 auto; padding:30px clamp(16px,4vw,44px) 80px; }
+  .hero{ display:flex; flex-direction:column; gap:10px; max-width:80ch; margin-bottom:8px; }
+  .hero .hn-h1{ margin-top:2px; }
+
+  .toolbar{ display:flex; align-items:center; gap:10px; margin:20px 0 24px; flex-wrap:wrap; padding:14px 16px; background:var(--hn-surface); border:1px solid var(--hn-border); border-radius:14px; }
+  .toolbar select, .toolbar input[type="file"]{ font:inherit; background:var(--hn-surface-2); color:var(--hn-text); border:1px solid var(--hn-border); border-radius:10px; padding:9px 12px; font-size:13px; }
+  .toolbar .sep{ width:1px; height:26px; background:var(--hn-border); margin:0 2px; }
+  .toolbar .hn-btn{ padding:9px 14px; font-size:13px; }
+  .toolbar-msg{ font-size:12px; color:var(--hn-muted); margin-left:auto; }
+
+  .builder-grid{ display:grid; grid-template-columns:minmax(360px,460px) 1fr; gap:24px; align-items:start; }
+  @media (max-width:1080px){ .builder-grid{ grid-template-columns:1fr; } }
+
+  .panel{ background:var(--hn-surface); border:1px solid var(--hn-border); border-radius:16px; padding:18px; }
+  .panel h2{ font-size:15px; margin:0 0 4px; }
+  .panel-sub{ font-size:12px; color:var(--hn-faint); margin:0 0 14px; }
+
+  .field-row{ display:flex; flex-direction:column; gap:5px; margin-bottom:12px; }
+  .field-row label{ font-size:11.5px; font-weight:700; letter-spacing:.02em; color:var(--hn-muted); text-transform:uppercase; }
+  .field-row .hint{ font-size:11px; color:var(--hn-faint); font-weight:400; text-transform:none; letter-spacing:0; }
+  .field-row input[type="text"], .field-row input[type="number"], .field-row input[type="color"], .field-row textarea, .field-row select{
+    font:inherit; font-size:13px; background:var(--hn-surface-2); color:var(--hn-text);
+    border:1px solid var(--hn-border); border-radius:9px; padding:9px 10px; width:100%; box-sizing:border-box;
+  }
+  .field-row textarea{ resize:vertical; min-height:56px; line-height:1.4; }
+  .field-row input[type="color"]{ padding:3px; height:36px; cursor:pointer; }
+  .field-2col{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .field-check{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--hn-text); flex-direction:row; }
+  .field-check label{ text-transform:none; font-weight:600; letter-spacing:0; color:var(--hn-text); }
+  .field-check input{ width:16px; height:16px; }
+
+  .card-box{ border:1px solid var(--hn-border); border-radius:12px; padding:14px; margin-bottom:12px; background:var(--hn-surface-2); }
+  .card-box + .card-box{ margin-top:12px; }
+  .card-box-head{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .card-box-head .tag{ font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--hn-faint); }
+  .card-box-head select{ flex:1; }
+  .icon-btn{ width:28px; height:28px; flex:none; border-radius:8px; border:1px solid var(--hn-border); background:var(--hn-surface); color:var(--hn-muted); font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .icon-btn:hover{ color:var(--hn-text); background:var(--hn-border); }
+  .icon-btn.danger:hover{ color:#ff6b6b; border-color:#ff6b6b; }
+
+  .column-box{ border:1.5px solid var(--hn-border); border-radius:14px; padding:14px; margin-bottom:16px; }
+  .column-box-head{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .column-box-head input[type="text"]{ flex:1; font-weight:700; }
+  .column-box-head input[type="color"]{ width:36px; height:36px; flex:none; padding:2px; }
+
+  .add-row{ display:flex; gap:8px; margin-top:6px; }
+  .add-row select{ flex:1; }
+  .add-row .hn-btn{ padding:9px 14px; font-size:12.5px; white-space:nowrap; }
+
+  .blocks-list{ display:flex; flex-direction:column; gap:0; }
+  .screens-list{ display:flex; flex-direction:column; gap:0; }
+
+  .preview-wrap{ position:sticky; top:16px; }
+  .preview-controls{ display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  .preview-controls .hn-meta{ margin-left:auto; }
+  .preview-host .phones-grid{ min-height:200px; }
+  .empty-hint{ color:var(--hn-faint); font-size:13px; padding:40px 10px; text-align:center; border:1.5px dashed var(--hn-border); border-radius:14px; }
+
+  .saved-list{ max-height:260px; overflow-y:auto; }
+  .saved-item{ display:flex; align-items:center; gap:8px; padding:9px 4px; border-bottom:1px solid var(--hn-border); font-size:13px; }
+  .saved-item:last-child{ border-bottom:none; }
+  .saved-item .name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .saved-item button{ font-size:11.5px; }
+
+  dialog.hn-dialog{ border:1px solid var(--hn-border); border-radius:16px; background:var(--hn-surface); color:var(--hn-text); padding:20px; max-width:480px; width:92vw; }
+  dialog.hn-dialog::backdrop{ background:rgba(0,0,0,.6); }
+  dialog.hn-dialog h3{ margin:0 0 12px; font-size:16px; }
+  dialog.hn-dialog .dialog-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
+</style>
+</head>
+<body>
+
+<nav class="hn-nav">
+  <a class="hn-brand" href="index.html">
+    <img class="hn-wm-img" src="assets/brand/heynow-wordmark.png" alt="Heynow">
+  </a>
+  <div class="hn-nav-links">
+    <a href="index.html">Cascada vs Flow</a>
+    <a href="flow-webchat.html">Flow + Webchat</a>
+    <a href="builder.html" aria-current="page">Playground</a>
+  </div>
+</nav>
+<hr class="hn-grad-rule">
+
+<main class="page">
+  <header class="hero">
+    <span class="hn-eyebrow">Playground · Creador de demos</span>
+    <h1 class="hn-display hn-h1">Armá tu propia comparativa de WhatsApp.</h1>
+    <p class="hn-sub">Elegí columnas, escribí los mensajes, armá el WhatsApp Flow y el handoff al canal web. La previsualización usa exactamente las mismas animaciones que las demos de Heynow.</p>
+  </header>
+
+  <div class="toolbar">
+    <button class="hn-btn hn-btn--ghost" id="btnNew">Nueva</button>
+    <select id="templateSelect">
+      <option value="">Empezar desde plantilla…</option>
+      <option value="cascadaVsFlow">Cascada vs Flow</option>
+      <option value="flowWebchat">Flow + Webchat</option>
+      <option value="blank">Demo en blanco</option>
+    </select>
+    <div class="sep"></div>
+    <button class="hn-btn hn-btn--ghost" id="btnSave">Guardar</button>
+    <select id="savedSelect">
+      <option value="">Cargar demo guardada…</option>
+    </select>
+    <div class="sep"></div>
+    <button class="hn-btn hn-btn--ghost" id="btnExport">Exportar JSON</button>
+    <label class="hn-btn hn-btn--ghost" style="cursor:pointer;">
+      Importar JSON
+      <input type="file" id="importFile" accept="application/json" style="display:none;">
+    </label>
+    <div class="sep"></div>
+    <button class="hn-btn hn-btn--primary" id="btnShare">Copiar link</button>
+    <a class="hn-link hn-link--accent" id="openPlayerLink" href="player.html" target="_blank" rel="noopener">Abrir en player →</a>
+    <span class="toolbar-msg" id="toolbarMsg"></span>
+  </div>
+
+  <div class="builder-grid">
+    <!-- ============ FORM ============ -->
+    <section class="panel" id="formPanel">
+      <div class="field-row" style="margin-bottom:16px;">
+        <label for="metaTitle">Título de la demo</label>
+        <input type="text" id="metaTitle">
+      </div>
+      <div class="field-row" style="margin-bottom:18px;">
+        <label for="metaSubtitle">Subtítulo</label>
+        <textarea id="metaSubtitle" rows="2"></textarea>
+      </div>
+
+      <h2>Columnas</h2>
+      <p class="panel-sub">Cada columna es un teléfono que corre en paralelo. Un bloque "WhatsApp Flow" abre el formulario nativo; un bloque "Handoff" salta al navegador webchat.</p>
+      <div id="columnsList"></div>
+      <div class="add-row">
+        <button class="hn-btn hn-btn--ghost" id="btnAddColumn" style="width:100%;">+ Agregar columna</button>
+      </div>
+    </section>
+
+    <!-- ============ PREVIEW ============ -->
+    <section class="preview-wrap">
+      <div class="panel">
+        <div class="preview-controls">
+          <button class="hn-btn hn-btn--primary" id="playBtn"><span>▶</span> Reproducir demo</button>
+          <button class="hn-btn hn-btn--ghost" id="pauseBtn" disabled><span>⏸</span> Pausar</button>
+          <span class="hn-meta" id="previewHint">La previsualización se actualiza mientras editás.</span>
+        </div>
+        <div class="preview-host" id="previewHost"></div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<dialog class="hn-dialog" id="saveDialog">
+  <h3>Guardar demo</h3>
+  <div class="field-row">
+    <label for="saveNameInput">Nombre</label>
+    <input type="text" id="saveNameInput">
+  </div>
+  <div class="dialog-actions">
+    <button class="hn-btn hn-btn--ghost" id="saveCancelBtn" type="button">Cancelar</button>
+    <button class="hn-btn hn-btn--primary" id="saveConfirmBtn" type="button">Guardar</button>
+  </div>
+</dialog>
+
+<script src="assets/js/demo-engine.js"></script>
+<script src="assets/js/demo-store.js"></script>
+<script>
+(function(){
+  const BLOCK_TYPES = DemoEngine.BLOCK_TYPES;
+  const CONTROL_TYPES = DemoEngine.CONTROL_TYPES;
+  const CARD_STYLES = DemoEngine.CARD_STYLES;
+
+  const state = {
+    id: null,
+    name: '',
+    demo: clone(DemoEngine.TEMPLATES.flowWebchat)
+  };
+
+  function clone(v){ return JSON.parse(JSON.stringify(v)); }
+
+  /* ---------------- path get/set ---------------- */
+  function getPath(obj, path, def){
+    const keys = path.split('.');
+    let cur = obj;
+    for(const k of keys){ if(cur == null) return def; cur = cur[k]; }
+    return cur == null ? def : cur;
+  }
+  function setPath(obj, path, value){
+    const keys = path.split('.');
+    let cur = obj;
+    for(let i=0;i<keys.length-1;i++){
+      const k = keys[i];
+      if(cur[k] == null) cur[k] = /^\d+$/.test(keys[i+1]) ? [] : {};
+      cur = cur[k];
+    }
+    cur[keys[keys.length-1]] = value;
+  }
+  function linesToArray(str){
+    return String(str||'').split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+  }
+  function parseKbLines(str){
+    return String(str||'').split('\n').map(function(line){ return line.trim(); }).filter(Boolean).map(function(line){
+      const parts = line.split('|').map(function(p){ return p.trim(); });
+      let highlight = false;
+      if(parts.length && /^destacar$|^hl$/i.test(parts[parts.length-1])){ highlight = true; parts.pop(); }
+      return { name: parts[0] || '', meta: parts[1] || '', highlight: highlight };
+    });
+  }
+  function kbLinesFromItems(items){
+    return (items||[]).map(function(it){
+      return it.name + ' | ' + (it.meta||'') + (it.highlight ? ' | destacar' : '');
+    }).join('\n');
+  }
+  function csvToNumbers(str){
+    return String(str||'').split(',').map(function(s){ return s.trim(); }).filter(Boolean).map(Number).filter(function(n){ return !isNaN(n); });
+  }
+
+  /* ---------------- DOM helpers ---------------- */
+  function el(tag, attrs, children){
+    const node = document.createElement(tag);
+    attrs = attrs || {};
+    Object.keys(attrs).forEach(function(k){
+      if(k === 'class') node.className = attrs[k];
+      else if(k === 'html') node.innerHTML = attrs[k];
+      else if(k === 'text') node.textContent = attrs[k];
+      else node.setAttribute(k, attrs[k]);
+    });
+    (children||[]).forEach(function(c){ if(c) node.appendChild(c); });
+    return node;
+  }
+  function fieldRow(labelText, hintText, inputEl){
+    const label = el('label', {}, [document.createTextNode(labelText)]);
+    if(hintText) label.appendChild(el('span', {class:'hint', text:' — '+hintText}));
+    return el('div', {class:'field-row'}, [label, inputEl]);
+  }
+  function textInput(path, opts){
+    opts = opts || {};
+    const input = el('input', {type:'text', placeholder: opts.placeholder || ''});
+    input.value = getPath(state.demo, path, '') || '';
+    input.addEventListener('input', function(){
+      setPath(state.demo, path, input.value);
+      schedulePreviewRefresh();
+    });
+    return input;
+  }
+  function numberInput(path, opts){
+    opts = opts || {};
+    const input = el('input', {type:'number', placeholder: opts.placeholder != null ? String(opts.placeholder) : ''});
+    const v = getPath(state.demo, path, null);
+    input.value = v == null ? '' : v;
+    input.addEventListener('input', function(){
+      const raw = input.value;
+      setPath(state.demo, path, raw === '' ? null : Number(raw));
+      schedulePreviewRefresh();
+    });
+    return input;
+  }
+  function textareaInput(path, opts){
+    opts = opts || {};
+    const ta = el('textarea', { rows: String(opts.rows || 3), placeholder: opts.placeholder || '' });
+    if(opts.mode === 'lines'){
+      ta.value = (getPath(state.demo, path, []) || []).join('\n');
+      ta.addEventListener('input', function(){
+        setPath(state.demo, path, linesToArray(ta.value));
+        schedulePreviewRefresh();
+      });
+    } else if(opts.mode === 'kb'){
+      ta.value = kbLinesFromItems(getPath(state.demo, path, []));
+      ta.addEventListener('input', function(){
+        setPath(state.demo, path, parseKbLines(ta.value));
+        schedulePreviewRefresh();
+      });
+    } else {
+      ta.value = getPath(state.demo, path, '') || '';
+      ta.addEventListener('input', function(){
+        setPath(state.demo, path, ta.value);
+        schedulePreviewRefresh();
+      });
+    }
+    return ta;
+  }
+  function csvNumberInput(path, opts){
+    opts = opts || {};
+    const input = el('input', {type:'text', placeholder: opts.placeholder || '0, 1, 2'});
+    input.value = (getPath(state.demo, path, []) || []).join(', ');
+    input.addEventListener('input', function(){
+      setPath(state.demo, path, csvToNumbers(input.value));
+      schedulePreviewRefresh();
+    });
+    return input;
+  }
+  function checkboxRow(labelText, path, defaultVal, opts){
+    opts = opts || {};
+    const input = el('input', {type:'checkbox'});
+    const cur = opts.onChange ? !!defaultVal : getPath(state.demo, path, defaultVal);
+    input.checked = !!cur;
+    input.addEventListener('change', function(){
+      if(opts.onChange){
+        opts.onChange(input.checked);
+      } else {
+        setPath(state.demo, path, input.checked);
+      }
+      schedulePreviewRefresh();
+      if(opts.structural) renderForm();
+    });
+    const id = 'chk_' + path.replace(/[^a-z0-9]/gi, '_');
+    input.id = id;
+    const label = el('label', {for:id, text:labelText});
+    return el('div', {class:'field-check'}, [input, label]);
+  }
+  function selectInput(path, options, opts){
+    opts = opts || {};
+    const sel = el('select', {});
+    options.forEach(function(o){
+      sel.appendChild(el('option', {value:o.value, text:o.label}));
+    });
+    sel.value = getPath(state.demo, path, options[0] ? options[0].value : '');
+    sel.addEventListener('change', function(){
+      if(opts.onChange) opts.onChange(sel.value);
+      else setPath(state.demo, path, sel.value);
+      schedulePreviewRefresh();
+      if(opts.structural) renderForm();
+    });
+    return sel;
+  }
+  function iconBtn(symbol, title, danger, onClick){
+    const b = el('button', {class:'icon-btn' + (danger ? ' danger' : ''), type:'button', title:title, text:symbol});
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  /* ---------------- Defaults por tipo ---------------- */
+  function defaultBlock(type){
+    switch(type){
+      case 'bot': return { type:'bot', text:'Nuevo mensaje del bot.', typingMs:1400 };
+      case 'user': return { type:'user', text:'Respuesta del usuario.' };
+      case 'system': return { type:'system', text:'Mensaje de sistema.' };
+      case 'flow': return {
+        type:'flow', title:'Formulario', brandLine:'Mi empresa', submitLabel:'Enviar',
+        intro:{ text:'Completá el formulario acá.', ctaLabel:'Completar', typingMs:1300 },
+        screens:[ { question:'Primera pregunta', control:{ type:'radio', options:['Opción 1','Opción 2'], pick:0 } } ],
+        success:{ text:'✅ Enviado — ¡gracias!', delay:200 }
+      };
+      case 'handoff': return { type:'handoff', text:'Para eso, seguimos por el canal web 👇', linkText:'chat.miempresa.com', url:'chat.miempresa.com', typingMs:1600, highlightDelay:1100, channelLabel:'Webchat' };
+      case 'webBot': return { type:'webBot', text:'Mensaje del bot en el canal web.', typingMs:1400 };
+      case 'webUser': return { type:'webUser', text:'Respuesta del usuario en el canal web.' };
+      default: return { type:'bot', text:'' };
+    }
+  }
+  function defaultControl(type){
+    switch(type){
+      case 'check': return { type:'check', options:['Opción 1','Opción 2'], picks:[0] };
+      case 'nps': return { type:'nps', value:8 };
+      case 'text': return { type:'text', text:'Respuesta escrita' };
+      case 'radio':
+      default: return { type:'radio', options:['Opción 1','Opción 2'], pick:0 };
+    }
+  }
+
+  /* ---------------- Render: columnas ---------------- */
+  function renderColumnsList(){
+    const list = document.getElementById('columnsList');
+    list.innerHTML = '';
+    (state.demo.columns || []).forEach(function(col, ci){
+      list.appendChild(renderColumnBox(col, ci));
+    });
+  }
+
+  function renderColumnBox(col, ci){
+    const box = el('div', {class:'column-box'});
+    const nameInput = textInput('columns.'+ci+'.name');
+    const colorInput = el('input', {type:'color'});
+    colorInput.value = toHexColor(getPath(state.demo, 'columns.'+ci+'.accent', '#F15C2C'));
+    colorInput.addEventListener('input', function(){
+      setPath(state.demo, 'columns.'+ci+'.accent', colorInput.value);
+      schedulePreviewRefresh();
+    });
+    const head = el('div', {class:'column-box-head'}, [
+      colorInput, nameInput,
+      iconBtn('↑', 'Subir', false, function(){ moveItem(state.demo.columns, ci, -1); renderAll(); }),
+      iconBtn('↓', 'Bajar', false, function(){ moveItem(state.demo.columns, ci, 1); renderAll(); }),
+      iconBtn('✕', 'Eliminar columna', true, function(){ state.demo.columns.splice(ci,1); renderAll(); })
+    ]);
+    box.appendChild(head);
+
+    const brandRow = el('div', {class:'field-2col'}, [
+      fieldRow('Nombre de marca', '', textInput('columns.'+ci+'.brand.name')),
+      fieldRow('Avatar (2 letras)', '', textInput('columns.'+ci+'.brand.avatar', {placeholder:'HN'}))
+    ]);
+    box.appendChild(brandRow);
+
+    const metricRow = el('div', {class:'field-2col'}, [
+      fieldRow('Etiqueta del contador', '', textInput('columns.'+ci+'.metric.unit', {placeholder:'msgs salientes'})),
+      el('div', {}, [
+        checkboxRow('Mostrar cronómetro', 'columns.'+ci+'.metric.showTimer', true),
+        checkboxRow('Mostrar canal de recomendación', 'columns.'+ci+'.metric.showChannel', false, {structural:true})
+      ])
+    ]);
+    box.appendChild(metricRow);
+
+    if(getPath(state.demo, 'columns.'+ci+'.metric.showChannel', false)){
+      box.appendChild(el('div', {class:'field-2col'}, [
+        fieldRow('Etiqueta del canal', '', textInput('columns.'+ci+'.metric.channelLabel', {placeholder:'Canal de recomendación:'})),
+        fieldRow('Canal inicial', '', textInput('columns.'+ci+'.metric.initialChannel', {placeholder:'—'}))
+      ]));
+    }
+
+    box.appendChild(el('h2', {text:'Guion (bloques)', style:'margin-top:16px;'}));
+    const blocksList = el('div', {class:'blocks-list'});
+    (col.script || []).forEach(function(block, bi){
+      blocksList.appendChild(renderBlockBox(ci, bi, block));
+    });
+    box.appendChild(blocksList);
+
+    const addSel = el('select', {});
+    BLOCK_TYPES.forEach(function(t){ addSel.appendChild(el('option', {value:t.value, text:t.label})); });
+    const addBtn = el('button', {class:'hn-btn hn-btn--ghost', type:'button', text:'+ Agregar bloque'});
+    addBtn.addEventListener('click', function(){
+      col.script = col.script || [];
+      col.script.push(defaultBlock(addSel.value));
+      renderAll();
+    });
+    box.appendChild(el('div', {class:'add-row'}, [addSel, addBtn]));
+
+    return box;
+  }
+
+  function toHexColor(val){
+    if(!val) return '#F15C2C';
+    if(/^#/.test(val)) return val;
+    const map = { 'var(--hn-orange)':'#F15C2C', 'var(--hn-blue)':'#2A4BF5', 'var(--hn-violet)':'#AF52E8' };
+    return map[val] || '#F15C2C';
+  }
+
+  function moveItem(arr, index, dir){
+    const to = index + dir;
+    if(to < 0 || to >= arr.length) return;
+    const tmp = arr[index];
+    arr[index] = arr[to];
+    arr[to] = tmp;
+  }
+
+  /* ---------------- Render: bloques ---------------- */
+  function renderBlockBox(ci, bi, block){
+    const base = 'columns.'+ci+'.script.'+bi;
+    const box = el('div', {class:'card-box'});
+    const typeSel = selectInput(base+'.type', BLOCK_TYPES, {
+      structural:true,
+      onChange: function(newType){
+        const col = state.demo.columns[ci];
+        col.script[bi] = Object.assign({}, defaultBlock(newType), { text: block.text });
+      }
+    });
+    const head = el('div', {class:'card-box-head'}, [
+      el('span', {class:'tag', text:'Bloque '+(bi+1)}),
+      typeSel,
+      iconBtn('↑','Subir', false, function(){ moveItem(state.demo.columns[ci].script, bi, -1); renderAll(); }),
+      iconBtn('↓','Bajar', false, function(){ moveItem(state.demo.columns[ci].script, bi, 1); renderAll(); }),
+      iconBtn('✕','Eliminar bloque', true, function(){ state.demo.columns[ci].script.splice(bi,1); renderAll(); })
+    ]);
+    box.appendChild(head);
+
+    switch(block.type){
+      case 'bot':
+        box.appendChild(fieldRow('Texto del mensaje', 'usá \\n para salto de línea', textareaInput(base+'.text', {rows:3})));
+        box.appendChild(el('div', {class:'field-2col'}, [
+          fieldRow('Tiempo de "escribiendo…" (ms)', '', numberInput(base+'.typingMs', {placeholder:1400})),
+          fieldRow('Texto del botón (CTA)', 'opcional', textInput(base+'.cta'))
+        ]));
+        box.appendChild(checkboxRow('Cuenta como mensaje saliente', base+'.count', true));
+        box.appendChild(renderCardEditor(ci, bi, block));
+        break;
+      case 'webBot':
+        box.appendChild(fieldRow('Texto del mensaje (canal web)', 'usá \\n para salto de línea', textareaInput(base+'.text', {rows:3})));
+        box.appendChild(el('div', {class:'field-2col'}, [
+          fieldRow('Tiempo de "escribiendo…" (ms)', '', numberInput(base+'.typingMs', {placeholder:1400})),
+          fieldRow('Texto del botón (CTA)', 'opcional', textInput(base+'.cta'))
+        ]));
+        box.appendChild(renderCardEditor(ci, bi, block));
+        break;
+      case 'user':
+      case 'webUser':
+        box.appendChild(fieldRow('Texto del usuario', '', textareaInput(base+'.text', {rows:2})));
+        box.appendChild(fieldRow('Demora antes de responder (ms)', '', numberInput(base+'.delay', {placeholder:1100})));
+        break;
+      case 'system':
+        box.appendChild(fieldRow('Texto del mensaje de sistema', '', textareaInput(base+'.text', {rows:2})));
+        box.appendChild(fieldRow('Demora (ms)', '', numberInput(base+'.delay', {placeholder:700})));
+        break;
+      case 'flow':
+        box.appendChild(renderFlowEditor(ci, bi, block, base));
+        break;
+      case 'handoff':
+        box.appendChild(fieldRow('Texto antes del link', '', textareaInput(base+'.text', {rows:2})));
+        box.appendChild(el('div', {class:'field-2col'}, [
+          fieldRow('Texto del link', '', textInput(base+'.linkText', {placeholder:'chat.miempresa.com/tema'})),
+          fieldRow('Host mostrado en el navegador', '', textInput(base+'.url', {placeholder:'chat.miempresa.com'}))
+        ]));
+        box.appendChild(el('div', {class:'field-2col'}, [
+          fieldRow('Tiempo de "escribiendo…" (ms)', '', numberInput(base+'.typingMs', {placeholder:1600})),
+          fieldRow('Etiqueta de canal', '', textInput(base+'.channelLabel', {placeholder:'Webchat'}))
+        ]));
+        break;
+      default:
+        break;
+    }
+
+    return box;
+  }
+
+  function renderCardEditor(ci, bi, block){
+    const base = 'columns.'+ci+'.script.'+bi;
+    const wrap = el('div', {});
+    wrap.appendChild(checkboxRow('Adjuntar tarjeta (plan o base de conocimiento)', base+'.card', !!block.card, {
+      structural:true,
+      onChange: function(checked){
+        const col = state.demo.columns[ci];
+        if(checked) col.script[bi].card = col.script[bi].card || { style:'plan', title:'', description:'', items:[] };
+        else delete col.script[bi].card;
+      }
+    }));
+
+    if(block.card){
+      const cardBox = el('div', {class:'card-box', style:'margin-top:8px;'});
+      const styleSel = el('select', {});
+      CARD_STYLES.forEach(function(s){ styleSel.appendChild(el('option', {value:s.value, text:s.label})); });
+      styleSel.value = block.card.style || 'plan';
+      styleSel.addEventListener('change', function(){
+        const col = state.demo.columns[ci];
+        if(styleSel.value === 'kb') col.script[bi].card = { style:'kb', label:'📚 Base de conocimiento', items:[] };
+        else col.script[bi].card = { style:'plan', title:'', description:'', items:[] };
+        renderAll();
+      });
+      cardBox.appendChild(el('div', {class:'card-box-head'}, [el('span', {class:'tag', text:'Tarjeta'}), styleSel]));
+
+      if(block.card.style === 'kb'){
+        cardBox.appendChild(fieldRow('Etiqueta', '', textInput(base+'.card.label')));
+        cardBox.appendChild(fieldRow('Ítems', 'una línea por ítem: Nombre | detalle | destacar (opcional)', textareaInput(base+'.card.items', {rows:3, mode:'kb'})));
+      } else {
+        cardBox.appendChild(fieldRow('Título', '', textInput(base+'.card.title')));
+        cardBox.appendChild(fieldRow('Descripción', '', textareaInput(base+'.card.description', {rows:2})));
+        cardBox.appendChild(fieldRow('Viñetas', 'una por línea', textareaInput(base+'.card.items', {rows:3, mode:'lines'})));
+      }
+      wrap.appendChild(cardBox);
+    }
+    return wrap;
+  }
+
+  function renderFlowEditor(ci, bi, block, base){
+    const wrap = el('div', {});
+    wrap.appendChild(el('div', {class:'field-2col'}, [
+      fieldRow('Título del formulario', '', textInput(base+'.title')),
+      fieldRow('Marca (línea inferior)', '', textInput(base+'.brandLine'))
+    ]));
+    wrap.appendChild(fieldRow('Texto del botón final', '', textInput(base+'.submitLabel', {placeholder:'Enviar respuestas'})));
+
+    wrap.appendChild(el('h2', {text:'Mensaje que abre el Flow', style:'margin-top:12px; font-size:13px;'}));
+    wrap.appendChild(fieldRow('Texto', '', textareaInput(base+'.intro.text', {rows:2})));
+    wrap.appendChild(el('div', {class:'field-2col'}, [
+      fieldRow('Texto del botón (CTA)', '', textInput(base+'.intro.ctaLabel', {placeholder:'Completar'})),
+      fieldRow('Tiempo de "escribiendo…" (ms)', '', numberInput(base+'.intro.typingMs', {placeholder:1300}))
+    ]));
+
+    wrap.appendChild(el('h2', {text:'Pantallas del Flow', style:'margin-top:14px; font-size:13px;'}));
+    const screensList = el('div', {class:'screens-list'});
+    (block.screens || []).forEach(function(sc, si){
+      screensList.appendChild(renderScreenBox(ci, bi, si, sc, base));
+    });
+    wrap.appendChild(screensList);
+    const addBtn = el('button', {class:'hn-btn hn-btn--ghost', type:'button', text:'+ Agregar pantalla'});
+    addBtn.addEventListener('click', function(){
+      block.screens = block.screens || [];
+      block.screens.push({ question:'Nueva pregunta', control:{ type:'radio', options:['Opción 1','Opción 2'], pick:0 } });
+      renderAll();
+    });
+    wrap.appendChild(el('div', {class:'add-row'}, [addBtn]));
+
+    wrap.appendChild(el('h2', {text:'Mensaje de éxito (al cerrar el Flow)', style:'margin-top:14px; font-size:13px;'}));
+    wrap.appendChild(el('div', {class:'field-2col'}, [
+      fieldRow('Texto', '', textInput(base+'.success.text', {placeholder:'✅ Enviado — ¡gracias!'})),
+      fieldRow('Demora (ms)', '', numberInput(base+'.success.delay', {placeholder:200}))
+    ]));
+
+    return wrap;
+  }
+
+  function renderScreenBox(ci, bi, si, sc, blockBase){
+    const base = blockBase+'.screens.'+si;
+    const box = el('div', {class:'card-box'});
+    box.appendChild(el('div', {class:'card-box-head'}, [
+      el('span', {class:'tag', text:'Pantalla '+(si+1)}),
+      el('span', {style:'flex:1;'}),
+      iconBtn('↑','Subir', false, function(){ moveItem(state.demo.columns[ci].script[bi].screens, si, -1); renderAll(); }),
+      iconBtn('↓','Bajar', false, function(){ moveItem(state.demo.columns[ci].script[bi].screens, si, 1); renderAll(); }),
+      iconBtn('✕','Eliminar pantalla', true, function(){ state.demo.columns[ci].script[bi].screens.splice(si,1); renderAll(); })
+    ]));
+    box.appendChild(fieldRow('Pregunta', '', textInput(base+'.question')));
+    box.appendChild(fieldRow('Ayuda', 'opcional', textInput(base+'.help')));
+
+    const controlSel = selectInput(base+'.control.type', CONTROL_TYPES, {
+      structural:true,
+      onChange: function(newType){
+        state.demo.columns[ci].script[bi].screens[si].control = defaultControl(newType);
+      }
+    });
+    box.appendChild(fieldRow('Tipo de control', '', controlSel));
+
+    const control = sc.control || {};
+    switch(control.type){
+      case 'check':
+        box.appendChild(fieldRow('Opciones', 'una por línea', textareaInput(base+'.control.options', {rows:3, mode:'lines'})));
+        box.appendChild(fieldRow('Marcadas (índices, desde 0)', 'ej: 0, 2, 6', csvNumberInput(base+'.control.picks')));
+        break;
+      case 'nps':
+        box.appendChild(fieldRow('Valor marcado (0–10)', '', numberInput(base+'.control.value', {placeholder:8})));
+        break;
+      case 'text':
+        box.appendChild(fieldRow('Texto que se tipea', '', textareaInput(base+'.control.text', {rows:2})));
+        break;
+      case 'radio':
+      default:
+        box.appendChild(fieldRow('Opciones', 'una por línea', textareaInput(base+'.control.options', {rows:3, mode:'lines'})));
+        box.appendChild(fieldRow('Marcada (índice, desde 0)', '', numberInput(base+'.control.pick', {placeholder:0})));
+        break;
+    }
+    return box;
+  }
+
+  /* ---------------- Render general ---------------- */
+  function renderForm(){
+    document.getElementById('metaTitle').value = state.demo.title || '';
+    document.getElementById('metaSubtitle').value = state.demo.subtitle || '';
+    renderColumnsList();
+  }
+
+  let previewController = null;
+  let previewTimer = null;
+  function schedulePreviewRefresh(){
+    if(previewTimer) clearTimeout(previewTimer);
+    previewTimer = setTimeout(refreshPreview, 350);
+  }
+  function refreshPreview(){
+    const host = document.getElementById('previewHost');
+    if(previewController) previewController.destroy();
+    if(!state.demo.columns || !state.demo.columns.length){
+      host.innerHTML = '<div class="empty-hint">Agregá al menos una columna para ver la previsualización.</div>';
+      previewController = null;
+      syncPlaybackUi('idle');
+      return;
+    }
+    previewController = DemoEngine.mount(host, state.demo, {
+      onStateChange: function(s){ syncPlaybackUi(s); }
+    });
+    syncPlaybackUi('idle');
+  }
+
+  function renderAll(){
+    renderForm();
+    refreshPreview();
+  }
+
+  /* ---------------- Reproducción ---------------- */
+  const playBtn = document.getElementById('playBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const previewHint = document.getElementById('previewHint');
+
+  function syncPlaybackUi(s){
+    if(s === 'running'){
+      playBtn.disabled = true; playBtn.innerHTML = '<span>▶</span> En curso…';
+      pauseBtn.disabled = false; pauseBtn.innerHTML = '<span>⏸</span> Pausar';
+      previewHint.textContent = 'Reproduciendo…';
+    } else if(s === 'paused'){
+      playBtn.disabled = true;
+      pauseBtn.disabled = false; pauseBtn.innerHTML = '<span>▶</span> Continuar';
+      previewHint.textContent = 'Pausado.';
+    } else if(s === 'done'){
+      playBtn.disabled = false; playBtn.innerHTML = '<span>↻</span> Reproducir de nuevo';
+      pauseBtn.disabled = true; pauseBtn.innerHTML = '<span>⏸</span> Pausar';
+      previewHint.textContent = 'Demo terminada.';
+    } else {
+      playBtn.disabled = false; playBtn.innerHTML = '<span>▶</span> Reproducir demo';
+      pauseBtn.disabled = true; pauseBtn.innerHTML = '<span>⏸</span> Pausar';
+      previewHint.textContent = 'La previsualización se actualiza mientras editás.';
+    }
+  }
+  playBtn.addEventListener('click', function(){ if(previewController) previewController.play(); });
+  pauseBtn.addEventListener('click', function(){ if(previewController) previewController.togglePause(); });
+
+  /* ---------------- Toolbar: plantillas / nueva ---------------- */
+  document.getElementById('btnNew').addEventListener('click', function(){
+    if(!confirm('¿Empezar una demo nueva? Se perderán los cambios sin guardar.')) return;
+    state.id = null; state.name = '';
+    state.demo = clone(DemoEngine.TEMPLATES.blank);
+    renderAll();
+  });
+  document.getElementById('templateSelect').addEventListener('change', function(e){
+    const key = e.target.value;
+    if(!key) return;
+    if(!confirm('¿Cargar esta plantilla? Se perderán los cambios sin guardar.')){ e.target.value=''; return; }
+    state.id = null; state.name = '';
+    state.demo = clone(DemoEngine.TEMPLATES[key]);
+    e.target.value = '';
+    renderAll();
+  });
+
+  /* ---------------- Toolbar: guardar / cargar ---------------- */
+  const saveDialog = document.getElementById('saveDialog');
+  const saveNameInput = document.getElementById('saveNameInput');
+  document.getElementById('btnSave').addEventListener('click', function(){
+    saveNameInput.value = state.name || state.demo.title || '';
+    saveDialog.showModal();
+  });
+  document.getElementById('saveCancelBtn').addEventListener('click', function(){ saveDialog.close(); });
+  document.getElementById('saveConfirmBtn').addEventListener('click', function(){
+    const name = saveNameInput.value.trim() || 'Sin título';
+    const record = DemoStore.save({ id: state.id, name: name, demo: state.demo });
+    state.id = record.id; state.name = record.name;
+    saveDialog.close();
+    refreshSavedList();
+    showToolbarMsg('Guardada como "'+name+'".');
+  });
+
+  function refreshSavedList(){
+    const sel = document.getElementById('savedSelect');
+    sel.innerHTML = '<option value="">Cargar demo guardada…</option>';
+    DemoStore.list().forEach(function(item){
+      sel.appendChild(el('option', {value:item.id, text:item.name}));
+    });
+  }
+  document.getElementById('savedSelect').addEventListener('change', function(e){
+    const id = e.target.value;
+    if(!id) return;
+    const record = DemoStore.get(id);
+    if(!record){ showToolbarMsg('No se encontró esa demo.'); return; }
+    state.id = record.id; state.name = record.name;
+    state.demo = record.demo;
+    renderAll();
+    showToolbarMsg('Cargada "'+record.name+'".');
+  });
+
+  /* ---------------- Toolbar: export / import ---------------- */
+  document.getElementById('btnExport').addEventListener('click', function(){
+    DemoStore.exportJSON(state.name || state.demo.title || 'demo', state.demo);
+  });
+  document.getElementById('importFile').addEventListener('change', function(e){
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    DemoStore.importJSON(file).then(function(result){
+      state.id = null;
+      state.name = result.name || '';
+      state.demo = result.demo;
+      renderAll();
+      showToolbarMsg('Importada "'+state.name+'".');
+    }).catch(function(err){
+      showToolbarMsg('No se pudo importar: ' + err.message);
+    });
+    e.target.value = '';
+  });
+
+  /* ---------------- Toolbar: compartir ---------------- */
+  document.getElementById('btnShare').addEventListener('click', function(){
+    showToolbarMsg('Generando link…');
+    DemoStore.buildShareUrl(state.demo).then(function(url){
+      document.getElementById('openPlayerLink').href = url;
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(url).then(function(){
+          showToolbarMsg('Link copiado al portapapeles.');
+        }).catch(function(){
+          showToolbarMsg('Link listo: ' + url);
+        });
+      } else {
+        showToolbarMsg('Link listo: ' + url);
+      }
+    }).catch(function(err){
+      showToolbarMsg('No se pudo generar el link: ' + err.message);
+    });
+  });
+
+  let toolbarMsgTimer = null;
+  function showToolbarMsg(text){
+    const msgEl = document.getElementById('toolbarMsg');
+    msgEl.textContent = text;
+    if(toolbarMsgTimer) clearTimeout(toolbarMsgTimer);
+    toolbarMsgTimer = setTimeout(function(){ msgEl.textContent = ''; }, 4000);
+  }
+
+  /* ---------------- Meta fields ---------------- */
+  document.getElementById('metaTitle').addEventListener('input', function(e){
+    state.demo.title = e.target.value;
+    schedulePreviewRefresh();
+  });
+  document.getElementById('metaSubtitle').addEventListener('input', function(e){
+    state.demo.subtitle = e.target.value;
+    schedulePreviewRefresh();
+  });
+  document.getElementById('btnAddColumn').addEventListener('click', function(){
+    state.demo.columns = state.demo.columns || [];
+    state.demo.columns.push({
+      name: 'Nueva columna',
+      accent: 'var(--hn-orange)',
+      brand: { name: 'Mi empresa', avatar: '' },
+      metric: { unit: 'msgs salientes', showTimer: true },
+      script: [ defaultBlock('bot') ]
+    });
+    renderAll();
+  });
+
+  /* ---------------- Carga inicial ---------------- */
+  function init(){
+    const hashDemo = DemoStore.readShareHash();
+    if(hashDemo){
+      DemoStore.decode(hashDemo).then(function(demo){
+        state.demo = demo;
+        renderAll();
+      }).catch(function(){
+        renderAll();
+      });
+    } else {
+      renderAll();
+    }
+    refreshSavedList();
+  }
+  init();
+})();
+</script>
+</body>
+</html>

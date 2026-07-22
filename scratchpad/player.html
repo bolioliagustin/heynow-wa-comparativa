@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heynow · Demo</title>
+<link rel="icon" href="assets/brand/heynow-iso.png">
+<link rel="stylesheet" href="assets/css/heynow.css">
+<link rel="stylesheet" href="assets/css/demo.css">
+<style>
+  .page{ max-width:1200px; margin:0 auto; padding:38px clamp(18px,5vw,56px) 80px; }
+  .hero{ display:flex; flex-direction:column; gap:14px; max-width:70ch; margin-bottom:14px; }
+  .hero .hn-h1{ margin-top:2px; }
+  .controls{ display:flex; align-items:center; gap:16px; margin:26px 0 30px; flex-wrap:wrap; }
+  .empty-hint{ color:var(--hn-faint); font-size:14px; padding:60px 10px; text-align:center; border:1.5px dashed var(--hn-border); border-radius:16px; }
+  .empty-hint a{ color:var(--hn-orange); font-weight:700; text-decoration:none; }
+</style>
+</head>
+<body>
+
+<nav class="hn-nav">
+  <a class="hn-brand" href="index.html">
+    <img class="hn-wm-img" src="assets/brand/heynow-wordmark.png" alt="Heynow">
+  </a>
+  <div class="hn-nav-links">
+    <a href="index.html">Cascada vs Flow</a>
+    <a href="flow-webchat.html">Flow + Webchat</a>
+    <a href="builder.html">Playground</a>
+  </div>
+</nav>
+<hr class="hn-grad-rule">
+
+<main class="page">
+  <header class="hero">
+    <span class="hn-eyebrow" id="eyebrow">Demo · Heynow Playground</span>
+    <h1 class="hn-display hn-h1" id="demoTitle">Cargando demo…</h1>
+    <p class="hn-sub" id="demoSubtitle"></p>
+  </header>
+
+  <div class="controls" id="controlsRow" style="display:none;">
+    <button class="hn-btn hn-btn--primary" id="playBtn"><span>▶</span> Reproducir demo</button>
+    <button class="hn-btn hn-btn--ghost" id="pauseBtn" disabled><span>⏸</span> Pausar</button>
+    <span class="hn-meta" id="hint">Demo creada en el Playground de Heynow.</span>
+    <a class="hn-link hn-link--accent" href="builder.html" style="margin-left:auto">Editar en el Playground →</a>
+  </div>
+
+  <div id="host"></div>
+</main>
+
+<script src="assets/js/demo-engine.js"></script>
+<script src="assets/js/demo-store.js"></script>
+<script>
+(function(){
+  const host = document.getElementById('host');
+  const controlsRow = document.getElementById('controlsRow');
+  const titleEl = document.getElementById('demoTitle');
+  const subtitleEl = document.getElementById('demoSubtitle');
+  const playBtn = document.getElementById('playBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const hint = document.getElementById('hint');
+
+  let controller = null;
+
+  function syncUi(s){
+    if(s === 'running'){
+      playBtn.disabled = true; playBtn.innerHTML = '<span>▶</span> En curso…';
+      pauseBtn.disabled = false; pauseBtn.innerHTML = '<span>⏸</span> Pausar';
+      hint.textContent = 'Reproduciendo…';
+    } else if(s === 'paused'){
+      playBtn.disabled = true;
+      pauseBtn.disabled = false; pauseBtn.innerHTML = '<span>▶</span> Continuar';
+      hint.textContent = 'Pausado. Tocá Continuar para seguir.';
+    } else if(s === 'done'){
+      playBtn.disabled = false; playBtn.innerHTML = '<span>↻</span> Reproducir de nuevo';
+      pauseBtn.disabled = true; pauseBtn.innerHTML = '<span>⏸</span> Pausar';
+      hint.textContent = 'Demo terminada.';
+    } else {
+      playBtn.disabled = false; playBtn.innerHTML = '<span>▶</span> Reproducir demo';
+      pauseBtn.disabled = true; pauseBtn.innerHTML = '<span>⏸</span> Pausar';
+      hint.textContent = 'Demo creada en el Playground de Heynow.';
+    }
+  }
+  playBtn.addEventListener('click', function(){ if(controller) controller.play(); });
+  pauseBtn.addEventListener('click', function(){ if(controller) controller.togglePause(); });
+
+  function renderDemo(demo){
+    titleEl.textContent = demo.title || 'Demo sin título';
+    subtitleEl.textContent = demo.subtitle || '';
+    if(!demo.columns || !demo.columns.length){
+      host.innerHTML = '<div class="empty-hint">Esta demo no tiene columnas.</div>';
+      return;
+    }
+    controlsRow.style.display = '';
+    controller = DemoEngine.mount(host, demo, { onStateChange: syncUi });
+    syncUi('idle');
+  }
+
+  function showEmpty(){
+    titleEl.textContent = 'No hay ninguna demo para mostrar';
+    subtitleEl.textContent = '';
+    host.innerHTML = '<div class="empty-hint">Este link no incluye una demo válida. Creá una nueva en el <a href="builder.html">Playground</a>.</div>';
+  }
+
+  function init(){
+    const hashDemo = DemoStore.readShareHash();
+    if(hashDemo){
+      DemoStore.decode(hashDemo).then(renderDemo).catch(function(err){
+        titleEl.textContent = 'No se pudo abrir esta demo';
+        subtitleEl.textContent = err.message || '';
+        host.innerHTML = '<div class="empty-hint">El link parece estar dañado o incompleto.</div>';
+      });
+      return;
+    }
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    if(id){
+      const record = DemoStore.get(id);
+      if(record){ renderDemo(record.demo); return; }
+    }
+    showEmpty();
+  }
+  init();
+})();
+</script>
+</body>
+</html>
